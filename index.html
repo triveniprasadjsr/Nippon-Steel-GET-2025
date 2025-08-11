@@ -1,0 +1,1741 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nippon Steel Campus Aptitude Test (NSCAT)</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts & Font Awesome -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Custom Styles -->
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .timer-warning { animation: pulse-warning 1s infinite; }
+        .timer-final-warning { animation: pulse-final-warning 1s infinite; }
+        @keyframes pulse-warning {
+            0%, 100% { background-color: #fefcbf; color: #ca8a04; }
+            50% { background-color: #fde047; color: #a16207; }
+        }
+        .dark @keyframes pulse-warning {
+            0%, 100% { background-color: #422006; color: #fef08a; }
+            50% { background-color: #78350f; color: #fde047; }
+        }
+        @keyframes pulse-final-warning {
+            0%, 100% { background-color: #fecaca; color: #dc2626; }
+            50% { background-color: #f87171; color: #b91c1c; }
+        }
+        .dark @keyframes pulse-final-warning {
+            0%, 100% { background-color: #450a0a; color: #fca5a5; }
+            50% { background-color: #7f1d1d; color: #f87171; }
+        }
+        .question-status-grid-item {
+            width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;
+            border-radius: 50%; cursor: pointer; font-weight: 600;
+            transition: transform 0.1s ease-in-out;
+        }
+        .question-status-grid-item:hover {
+            transform: scale(1.1);
+        }
+        .status-answered { background-color: #4ade80; color: white; }
+        .dark .status-answered { background-color: #22c55e; }
+        .status-not-answered { background-color: #ef4444; color: white; }
+        .dark .status-not-answered { background-color: #b91c1c; }
+        .status-review { background-color: #60a5fa; color: white; }
+        .dark .status-review { background-color: #3b82f6; }
+        .status-answered-review { background-color: #60a5fa; color: white; position: relative; }
+        .dark .status-answered-review { background-color: #3b82f6; }
+        .status-answered-review::after {
+            content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
+            position: absolute; bottom: -2px; right: -2px; font-size: 10px;
+            color: white; background-color: #22c55e; border-radius: 50%;
+            width: 16px; height: 16px; display: flex; align-items: center; justify-content: center;
+            border: 1px solid white;
+        }
+        /* Custom Scrollbar for Question Palette */
+        .question-palette-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+        .question-palette-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .question-palette-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #4a5568; /* gray-600 */
+            border-radius: 4px;
+            border: 2px solid transparent;
+            background-clip: content-box;
+        }
+        .question-palette-scrollbar::-webkit-scrollbar-thumb:hover {
+            background-color: #718096; /* gray-500 */
+        }
+        /* For Firefox */
+        .question-palette-scrollbar {
+            scrollbar-width: thin;
+            scrollbar-color: #4a5568 transparent; /* thumb and track color */
+        }
+    </style>
+
+    <!-- React and Babel for in-browser transpilation -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body class="bg-gray-900 text-gray-200 transition-colors duration-300">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        // --- Constants ---
+        const DEFAULT_QUIZ_DATA = {
+          "Physics": {
+            "questions": [
+              { "q": "What is the SI unit of force?", "o": ["Joule", "Watt", "Newton", "Pascal"], "a": 2 },
+              { "q": "Which of Newton's laws is also known as the law of inertia?", "o": ["Newton's First Law", "Newton's Second Law", "Newton's Third Law", "Law of Gravitation"], "a": 0 },
+              { "q": "What is the SI unit of work or energy?", "o": ["Joule", "Watt", "Coulomb", "Pascal"], "a": 0 },
+              { "q": "The rate of change of velocity is called...", "o": ["Speed", "Momentum", "Inertia", "Acceleration"], "a": 3 },
+              { "q": "What is the value of acceleration due to gravity (g) on Earth's surface?", "o": ["9.8 m/s²", "3.7 m/s²", "1.6 m/s²", "24.8 m/s²"], "a": 0 },
+              { "q": "Which of the following is a vector quantity?", "o": ["Mass", "Speed", "Distance", "Velocity"], "a": 3 },
+              { "q": "The law of universal gravitation was formulated by whom?", "o": ["Galileo Galilei", "Isaac Newton", "Albert Einstein", "Johannes Kepler"], "a": 1 },
+              { "q": "What is the SI unit of power?", "o": ["Joule", "Hertz", "Watt", "Newton"], "a": 2 },
+              { "q": "A projectile follows which type of path under gravity?", "o": ["Circular", "Parabolic", "Hyperbolic", "Straight line"], "a": 1 },
+              { "q": "What is momentum a product of?", "o": ["Force and time", "Mass and velocity", "Mass and acceleration", "Force and distance"], "a": 1 },
+              { "q": "For every action, there is an equal and opposite reaction. This is...", "o": ["Newton's First Law", "Newton's Second Law", "Newton's Third Law", "Law of Conservation of Energy"], "a": 2 },
+              { "q": "What is the SI unit of pressure?", "o": ["Newton", "Joule", "Watt", "Pascal"], "a": 3 },
+              { "q": "The escape velocity from the Earth's surface is approximately:", "o": ["7.9 km/s", "9.8 km/s", "11.2 km/s", "15.0 km/s"], "a": 2 },
+              { "q": "What does a spinning top demonstrate?", "o": ["Linear momentum", "Angular momentum", "Kinetic energy", "Potential energy"], "a": 1 },
+              { "q": "Which of these is a scalar quantity?", "o": ["Force", "Velocity", "Acceleration", "Mass"], "a": 3 },
+              { "q": "Which mode of heat transfer does not require a medium?", "o": ["Conduction", "Convection", "Radiation", "Advection"], "a": 2 },
+              { "q": "What temperature is known as absolute zero?", "o": ["0 K", "0 °C", "0 °F", "100 K"], "a": 0 },
+              { "q": "The first law of thermodynamics is a statement of the conservation of...", "o": ["Mass", "Energy", "Momentum", "Charge"], "a": 1 },
+              { "q": "What is a measure of the disorder or randomness of a system?", "o": ["Enthalpy", "Entropy", "Temperature", "Pressure"], "a": 1 },
+              { "q": "Which device is used to measure temperature?", "o": ["Barometer", "Ammeter", "Manometer", "Thermometer"], "a": 3 },
+              { "q": "Sound waves are an example of what type of wave?", "o": ["Longitudinal waves", "Transverse waves", "Electromagnetic waves", "Surface waves"], "a": 0 },
+              { "q": "What is the SI unit of frequency?", "o": ["Decibel", "Meter", "Second", "Hertz"], "a": 3 },
+              { "q": "Light waves are an example of what type of wave?", "o": ["Longitudinal waves", "Transverse waves", "Mechanical waves", "Matter waves"], "a": 1 },
+              { "q": "The bending of light as it passes from one medium to another is called:", "o": ["Reflection", "Refraction", "Diffraction", "Dispersion"], "a": 1 },
+              { "q": "Which type of mirror is used as a rear-view mirror in vehicles?", "o": ["Concave mirror", "Plane mirror", "Convex mirror", "Cylindrical mirror"], "a": 2 },
+              { "q": "The splitting of white light into its constituent colors is known as:", "o": ["Interference", "Dispersion", "Polarization", "Diffraction"], "a": 1 },
+              { "q": "A lens that is thicker at the center than at the edges is a:", "o": ["Concave lens", "Convex lens", "Plano-concave lens", "Meniscus lens"], "a": 1 },
+              { "q": "The speed of sound is fastest in which medium?", "o": ["Vacuum", "Air", "Water", "Steel"], "a": 3 },
+              { "q": "What is the SI unit of electric charge?", "o": ["Ampere", "Volt", "Ohm", "Coulomb"], "a": 3 },
+              { "q": "Ohm's law relates voltage, current, and what other quantity?", "o": ["Power", "Charge", "Resistance", "Capacitance"], "a": 2 },
+              { "q": "Which of these is the best conductor of electricity?", "o": ["Silver", "Glass", "Rubber", "Wood"], "a": 0 },
+              { "q": "What is the SI unit of electric current?", "o": ["Volt", "Ampere", "Ohm", "Watt"], "a": 1 },
+              { "q": "Like electric charges ______, and opposite charges ______.", "o": ["attract, repel", "repel, attract", "attract, attract", "repel, repel"], "a": 1 },
+              { "q": "A device used to measure electric current is called a(n):", "o": ["Ammeter", "Voltmeter", "Ohmmeter", "Galvanometer"], "a": 0 },
+              { "q": "Magnetic field lines originate from which pole of a magnet?", "o": ["North pole", "South pole", "Both poles", "Neither pole"], "a": 0 },
+              { "q": "What is the SI unit for magnetic field strength?", "o": ["Weber", "Henry", "Tesla", "Gauss"], "a": 2 },
+              { "q": "An electric motor converts ______ energy into ______ energy.", "o": ["mechanical, electrical", "electrical, mechanical", "chemical, electrical", "electrical, heat"], "a": 1 },
+              { "q": "Which of the following is a good electrical insulator?", "o": ["Copper", "Aluminum", "Gold", "Plastic"], "a": 3 },
+              { "q": "Who is credited with the theory of general relativity?", "o": ["Isaac Newton", "Niels Bohr", "Albert Einstein", "Max Planck"], "a": 2 },
+              { "q": "The equation E=mc² relates which two concepts?", "o": ["Energy and charge", "Mass and energy", "Momentum and speed", "Force and mass"], "a": 1 },
+              { "q": "The particle of light is known as a:", "o": ["Photon", "Electron", "Proton", "Neutron"], "a": 0 },
+              { "q": "What is the charge of an electron?", "o": ["Positive", "Negative", "Neutral", "Variable"], "a": 1 },
+              { "q": "The process of splitting a heavy atomic nucleus is called:", "o": ["Nuclear fission", "Nuclear fusion", "Radioactive decay", "Chain reaction"], "a": 0 },
+              { "q": "Which particle is found in the nucleus of an atom along with protons?", "o": ["Electron", "Photon", "Neutron", "Positron"], "a": 2 },
+              { "q": "The process that powers the Sun is:", "o": ["Nuclear fission", "Nuclear fusion", "Chemical combustion", "Gravitational collapse"], "a": 1 },
+              { "q": "Which of these is NOT a fundamental force of nature?", "o": ["Gravity", "Electromagnetism", "Friction", "Strong Nuclear Force"], "a": 2 },
+              { "q": "Who is considered the father of quantum theory?", "o": ["Albert Einstein", "Erwin Schrödinger", "Werner Heisenberg", "Max Planck"], "a": 3 },
+              { "q": "The uncertainty principle was formulated by:", "o": ["Niels Bohr", "Werner Heisenberg", "Albert Einstein", "Louis de Broglie"], "a": 1 },
+              { "q": "What color of light has the longest wavelength?", "o": ["Blue", "Green", "Yellow", "Red"], "a": 3 },
+              { "q": "An object's resistance to a change in its state of motion is called:", "o": ["Momentum", "Inertia", "Force", "Weight"], "a": 1 }
+            ]
+          },
+          "Chemistry": {
+            "questions": [
+              { "q": "What is the chemical symbol for gold?", "o": ["Ag", "Au", "Ge", "Go"], "a": 1 },
+              { "q": "What is the pH of pure water?", "o": ["0", "14", "1", "7"], "a": 3 },
+              { "q": "Which gas is most abundant in the Earth's atmosphere?", "o": ["Oxygen", "Hydrogen", "Nitrogen", "Carbon Dioxide"], "a": 2 },
+              { "q": "What is the chemical formula for table salt?", "o": ["H₂O", "CO₂", "NaCl", "C₆H₁₂O₆"], "a": 2 },
+              { "q": "Which of the following is a noble gas?", "o": ["Oxygen", "Nitrogen", "Helium", "Hydrogen"], "a": 2 },
+              { "q": "The atomic number of an element is the number of ______ in its nucleus.", "o": ["Neutrons", "Electrons", "Protons", "Molecules"], "a": 2 },
+              { "q": "What type of bond involves the sharing of electron pairs between atoms?", "o": ["Ionic bond", "Covalent bond", "Metallic bond", "Hydrogen bond"], "a": 1 },
+              { "q": "Which element is the lightest element in the periodic table?", "o": ["Helium", "Lithium", "Oxygen", "Hydrogen"], "a": 3 },
+              { "q": "What is the common name for acetic acid?", "o": ["Vinegar", "Baking soda", "Aspirin", "Alcohol"], "a": 0 },
+              { "q": "Bronze is an alloy of copper and what other metal?", "o": ["Zinc", "Aluminum", "Tin", "Nickel"], "a": 2 },
+              { "q": "What charge does a proton have?", "o": ["Positive", "Negative", "Neutral", "No charge"], "a": 0 },
+              { "q": "What does a catalyst do in a chemical reaction?", "o": ["Stops the reaction", "Is consumed in the reaction", "Speeds up the reaction", "Slows down the reaction"], "a": 2 },
+              { "q": "Which of these is a halogen?", "o": ["Sodium", "Iron", "Fluorine", "Helium"], "a": 2 },
+              { "q": "The process of a solid turning directly into a gas is called:", "o": ["Evaporation", "Condensation", "Melting", "Sublimation"], "a": 3 },
+              { "q": "What is the main component of natural gas?", "o": ["Ethane", "Propane", "Butane", "Methane"], "a": 3 },
+              { "q": "What is the chemical formula for water?", "o": ["HO₂", "H₂O", "CO₂", "O₂H"], "a": 1 },
+              { "q": "Substances with a pH less than 7 are considered:", "o": ["Acids", "Bases", "Neutral", "Salts"], "a": 0 },
+              { "q": "What is the chemical symbol for silver?", "o": ["Si", "Au", "Ag", "Sr"], "a": 2 },
+              { "q": "The columns in the periodic table are called:", "o": ["Periods", "Series", "Groups", "Rows"], "a": 2 },
+              { "q": "Isotopes are atoms of the same element with a different number of:", "o": ["Protons", "Electrons", "Neutrons", "Ions"], "a": 2 },
+              { "q": "Which type of radiation is the most penetrating?", "o": ["Alpha", "Beta", "Gamma", "Delta"], "a": 2 },
+              { "q": "What is the process of coating iron with zinc to prevent rust?", "o": ["Electroplating", "Galvanization", "Anodizing", "Smelting"], "a": 1 },
+              { "q": "Which of these is not a state of matter?", "o": ["Solid", "Liquid", "Gas", "Energy"], "a": 3 },
+              { "q": "The study of carbon-containing compounds is called:", "o": ["Inorganic Chemistry", "Physical Chemistry", "Organic Chemistry", "Biochemistry"], "a": 2 },
+              { "q": "What is the chemical symbol for potassium?", "o": ["P", "Po", "K", "Pt"], "a": 2 },
+              { "q": "What is the mass number of an atom?", "o": ["Number of protons", "Number of neutrons", "Protons + Neutrons", "Protons + Electrons"], "a": 2 },
+              { "q": "What type of reaction absorbs heat from the surroundings?", "o": ["Exothermic", "Endothermic", "Combustion", "Neutralization"], "a": 1 },
+              { "q": "Diamond is an allotrope of which element?", "o": ["Silicon", "Carbon", "Germanium", "Sulfur"], "a": 1 },
+              { "q": "Which acid is found in lemons and limes?", "o": ["Sulfuric acid", "Acetic acid", "Citric acid", "Hydrochloric acid"], "a": 2 },
+              { "q": "What are the products of a neutralization reaction?", "o": ["Acid and Base", "Salt and Water", "Acid and Water", "Base and Salt"], "a": 1 },
+              { "q": "What is the chemical symbol for sodium?", "o": ["S", "So", "Na", "Nd"], "a": 2 },
+              { "q": "In which type of bond are electrons transferred from one atom to another?", "o": ["Covalent", "Ionic", "Metallic", "Hydrogen"], "a": 1 },
+              { "q": "The rows in the periodic table are called:", "o": ["Groups", "Families", "Series", "Periods"], "a": 3 },
+              { "q": "What does Avogadro's number represent?", "o": ["Number of atoms in a gram", "Number of particles in a mole", "Number of electrons in a shell", "Number of isotopes"], "a": 1 },
+              { "q": "What is the chemical symbol for iron?", "o": ["Ir", "I", "Fe", "In"], "a": 2 },
+              { "q": "Which element is essential for combustion?", "o": ["Nitrogen", "Oxygen", "Hydrogen", "Carbon"], "a": 1 },
+              { "q": "Ozone is an allotrope of which element?", "o": ["Hydrogen", "Nitrogen", "Oxygen", "Fluorine"], "a": 2 },
+              { "q": "Which law states that pressure is inversely proportional to volume?", "o": ["Charles's Law", "Boyle's Law", "Gay-Lussac's Law", "Avogadro's Law"], "a": 1 },
+              { "q": "What is the simplest form of a hydrocarbon?", "o": ["Ethane", "Methane", "Propane", "Butane"], "a": 1 },
+              { "q": "What is the process of separating crude oil into its components called?", "o": ["Cracking", "Fractional Distillation", "Polymerization", "Fermentation"], "a": 1 },
+              { "q": "Which polymer is commonly known as PVC?", "o": ["Polyethylene", "Polypropylene", "Polystyrene", "Polyvinyl chloride"], "a": 3 },
+              { "q": "What is the chemical symbol for lead?", "o": ["Ld", "Pb", "Le", "Pd"], "a": 1 },
+              { "q": "A solution that has a high concentration of H+ ions is:", "o": ["Strongly basic", "Weakly basic", "Strongly acidic", "Neutral"], "a": 2 },
+              { "q": "What is formed when an acid reacts with a metal?", "o": ["Salt and water", "Salt and hydrogen gas", "Base and water", "Base and hydrogen gas"], "a": 1 },
+              { "q": "What gives fizzy drinks their bubbles?", "o": ["Nitrogen gas", "Oxygen gas", "Carbon dioxide gas", "Hydrogen gas"], "a": 2 },
+              { "q": "Which element is a liquid at room temperature?", "o": ["Bromine", "Chlorine", "Iodine", "Sodium"], "a": 0 },
+              { "q": "What is the common name for sodium bicarbonate?", "o": ["Washing soda", "Baking soda", "Caustic soda", "Vinegar"], "a": 1 },
+              { "q": "Which of these is not a fossil fuel?", "o": ["Coal", "Petroleum", "Natural Gas", "Wood"], "a": 3 },
+              { "q": "The loss of electrons in a reaction is called:", "o": ["Reduction", "Oxidation", "Neutralization", "Sublimation"], "a": 1 },
+              { "q": "Which glass is heat-resistant?", "o": ["Flint glass", "Soda-lime glass", "Borosilicate glass", "Crown glass"], "a": 2 }
+            ]
+          },
+          "Biology": {
+            "questions": [
+              { "q": "What is known as the powerhouse of the cell?", "o": ["Nucleus", "Ribosome", "Mitochondrion", "Cell Membrane"], "a": 2 },
+              { "q": "Which process do plants use to make their own food?", "o": ["Respiration", "Photosynthesis", "Transpiration", "Germination"], "a": 1 },
+              { "q": "How many bones are in the adult human body?", "o": ["206", "212", "198", "300"], "a": 0 },
+              { "q": "What is the largest organ in the human body?", "o": ["Liver", "Brain", "Heart", "Skin"], "a": 3 },
+              { "q": "DNA is short for what molecule?", "o": ["Deoxyribonucleic acid", "Diatomic acid", "Ribonucleic acid", "Duonucleic acid"], "a": 0 },
+              { "q": "Which part of the blood is responsible for carrying oxygen?", "o": ["White blood cells", "Platelets", "Plasma", "Red blood cells"], "a": 3 },
+              { "q": "What is the control center of the cell?", "o": ["Mitochondrion", "Vacuole", "Nucleus", "Cytoplasm"], "a": 2 },
+              { "q": "What is the main function of the roots of a plant?", "o": ["To produce flowers", "To perform photosynthesis", "To absorb water and nutrients", "To store food"], "a": 2 },
+              { "q": "Which human system is responsible for fighting infections?", "o": ["Digestive system", "Nervous system", "Immune system", "Respiratory system"], "a": 2 },
+              { "q": "What is the basic unit of life?", "o": ["Atom", "Molecule", "Tissue", "Cell"], "a": 3 },
+              { "q": "What type of animal is a frog?", "o": ["Reptile", "Amphibian", "Mammal", "Fish"], "a": 1 },
+              { "q": "The process of cell division that results in two identical daughter cells is called:", "o": ["Meiosis", "Mitosis", "Fusion", "Budding"], "a": 1 },
+              { "q": "Which part of the plant contains the seeds?", "o": ["Leaf", "Stem", "Root", "Fruit"], "a": 3 },
+              { "q": "What is the study of fossils called?", "o": ["Archaeology", "Paleontology", "Geology", "Anthropology"], "a": 1 },
+              { "q": "Which organ in the human body produces insulin?", "o": ["Liver", "Stomach", "Pancreas", "Kidney"], "a": 2 },
+              { "q": "The green pigment in plants is called:", "o": ["Chlorophyll", "Xanthophyll", "Carotene", "Anthocyanin"], "a": 0 },
+              { "q": "Which of these is not a mammal?", "o": ["Whale", "Bat", "Dolphin", "Shark"], "a": 3 },
+              { "q": "What is the scientific study of insects called?", "o": ["Ornithology", "Entomology", "Herpetology", "Ichthyology"], "a": 1 },
+              { "q": "What is the main artery that carries blood from the heart?", "o": ["Pulmonary artery", "Femoral artery", "Aorta", "Carotid artery"], "a": 2 },
+              { "q": "Which kingdom does a mushroom belong to?", "o": ["Plantae", "Animalia", "Fungi", "Protista"], "a": 2 },
+              { "q": "What are the tiny air sacs in the lungs called?", "o": ["Bronchi", "Trachea", "Alveoli", "Capillaries"], "a": 2 },
+              { "q": "Which vitamin is produced when the skin is exposed to sunlight?", "o": ["Vitamin A", "Vitamin C", "Vitamin D", "Vitamin K"], "a": 2 },
+              { "q": "What is the hardest substance in the human body?", "o": ["Bone", "Dentin", "Enamel", "Keratin"], "a": 2 },
+              { "q": "What is the process by which organisms better adapted to their environment tend to survive?", "o": ["Genetic drift", "Mutation", "Natural selection", "Artificial selection"], "a": 2 },
+              { "q": "Which part of the brain is responsible for balance and coordination?", "o": ["Cerebrum", "Cerebellum", "Medulla oblongata", "Thalamus"], "a": 1 },
+              { "q": "What is the primary function of the kidneys?", "o": ["To digest food", "To pump blood", "To filter waste from blood", "To produce hormones"], "a": 2 },
+              { "q": "The passing of traits from parents to offspring is called:", "o": ["Metamorphosis", "Evolution", "Heredity", "Adaptation"], "a": 2 },
+              { "q": "How many chambers does the human heart have?", "o": ["One", "Two", "Three", "Four"], "a": 3 },
+              { "q": "What is the name of the tube that connects the throat to the stomach?", "o": ["Trachea", "Esophagus", "Larynx", "Aorta"], "a": 1 },
+              { "q": "Which gas do plants release during photosynthesis?", "o": ["Carbon Dioxide", "Nitrogen", "Oxygen", "Methane"], "a": 2 },
+              { "q": "Who is considered the father of genetics?", "o": ["Charles Darwin", "Gregor Mendel", "Louis Pasteur", "Robert Hooke"], "a": 1 },
+              { "q": "What are the building blocks of proteins?", "o": ["Fatty acids", "Nucleotides", "Amino acids", "Monosaccharides"], "a": 2 },
+              { "q": "Which part of the nervous system consists of the brain and spinal cord?", "o": ["Peripheral Nervous System", "Somatic Nervous System", "Autonomic Nervous System", "Central Nervous System"], "a": 3 },
+              { "q": "A group of similar cells performing a specific function is called a:", "o": ["Organ", "Tissue", "System", "Organism"], "a": 1 },
+              { "q": "What is the liquid component of blood called?", "o": ["Serum", "Lymph", "Plasma", "Platelets"], "a": 2 },
+              { "q": "Which of these is a producer in a food chain?", "o": ["Lion", "Deer", "Grass", "Mushroom"], "a": 2 },
+              { "q": "Which part of a flower develops into a fruit?", "o": ["Petal", "Sepal", "Ovary", "Stamen"], "a": 2 },
+              { "q": "What is the largest bone in the human body?", "o": ["Tibia", "Humerus", "Femur", "Fibula"], "a": 2 },
+              { "q": "Deficiency of which vitamin causes scurvy?", "o": ["Vitamin A", "Vitamin B", "Vitamin C", "Vitamin D"], "a": 2 },
+              { "q": "What structure connects a muscle to a bone?", "o": ["Ligament", "Tendon", "Cartilage", "Joint"], "a": 1 },
+              { "q": "Which organ system is responsible for breaking down food?", "o": ["Respiratory System", "Circulatory System", "Digestive System", "Nervous System"], "a": 2 },
+              { "q": "What is the process of water evaporating from the leaves of plants?", "o": ["Condensation", "Precipitation", "Respiration", "Transpiration"], "a": 3 },
+              { "q": "In which part of the body is the smallest bone located?", "o": ["Nose", "Ear", "Finger", "Toe"], "a": 1 },
+              { "q": "What is the main function of white blood cells?", "o": ["Carry oxygen", "Help in blood clotting", "Fight infection", "Carry nutrients"], "a": 2 },
+              { "q": "Which of these animals is warm-blooded?", "o": ["Snake", "Lizard", "Pigeon", "Crocodile"], "a": 2 },
+              { "q": "The double helix structure is associated with which molecule?", "o": ["RNA", "Protein", "Carbohydrate", "DNA"], "a": 3 },
+              { "q": "What is the tough, flexible tissue found at the ends of bones?", "o": ["Tendon", "Ligament", "Cartilage", "Marrow"], "a": 2 },
+              { "q": "An organism that eats both plants and animals is called a(n):", "o": ["Carnivore", "Herbivore", "Omnivore", "Producer"], "a": 2 },
+              { "q": "Where does most of the absorption of nutrients occur in the human body?", "o": ["Stomach", "Large intestine", "Small intestine", "Esophagus"], "a": 2 },
+              { "q": "What is the human body's normal temperature in Celsius?", "o": ["35°C", "37°C", "39°C", "41°C"], "a": 1 }
+            ]
+          }
+        };
+
+        const DEFAULT_QUIZ_TITLE = 'Nippon Steel Campus Aptitude Test (NSCAT)';
+        
+        // --- Reusable Components (Modals) ---
+        const Modal = ({ isOpen, onClose, children, maxWidth = 'max-w-2xl' }) => {
+          if (!isOpen) return null;
+
+          return (
+            <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4" onClick={onClose}>
+              <div className={`bg-gray-800 p-6 rounded-lg shadow-xl w-full ${maxWidth}`} onClick={(e) => e.stopPropagation()}>
+                {children}
+              </div>
+            </div>
+          );
+        };
+
+        const InfoModal = ({ isOpen, onClose, message }) => (
+            <div className={`fixed inset-0 bg-black bg-opacity-50 z-50 ${isOpen ? 'flex' : 'hidden'} items-center justify-center p-4`}>
+                <div className="bg-gray-800 p-6 rounded-lg shadow-xl max-w-sm w-full text-center">
+                    <p className="mb-4 text-lg text-gray-200">{message}</p>
+                    <button onClick={onClose} className="py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">OK</button>
+                </div>
+            </div>
+        );
+
+        const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message }) => (
+             <div className={`fixed inset-0 bg-black bg-opacity-60 z-50 ${isOpen ? 'flex' : 'hidden'} items-center justify-center p-4`}>
+                <div className="bg-gray-800 p-6 rounded-lg shadow-xl max-w-sm w-full">
+                    <h3 className="text-lg font-bold mb-4">{title}</h3>
+                    <p className="mb-6 text-gray-300">{message}</p>
+                    <div className="flex justify-end space-x-4">
+                        <button onClick={onClose} className="py-2 px-4 bg-gray-600 text-gray-200 rounded-md hover:bg-gray-500">Cancel</button>
+                        <button onClick={onConfirm} className="py-2 px-4 bg-red-600 text-white rounded-md hover:bg-red-700">Confirm</button>
+                    </div>
+                </div>
+            </div>
+        );
+
+        const ViolationWarningModal = ({ isOpen, onClose, message }) => (
+            <div className={`fixed inset-0 bg-black bg-opacity-75 z-[60] ${isOpen ? 'flex' : 'hidden'} items-center justify-center p-4`}>
+                <div className="bg-gray-800 border-2 border-yellow-500 p-6 rounded-lg shadow-xl max-w-lg w-full text-center" onClick={(e) => e.stopPropagation()}>
+                    <div className="text-yellow-400 mb-4">
+                        <i className="fas fa-exclamation-triangle fa-3x"></i>
+                    </div>
+                    <h3 className="text-xl font-bold text-white mb-4">Violation Detected</h3>
+                    <p className="mb-6 text-lg text-gray-200">{message}</p>
+                    <button 
+                        onClick={onClose} 
+                        className="py-2 px-6 bg-yellow-600 text-white font-semibold rounded-md hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 ring-offset-gray-800"
+                    >
+                        I Understand, Return to Exam
+                    </button>
+                </div>
+            </div>
+        );
+        
+        const ProctorWarningInputModal = ({ isOpen, onClose, onSend, studentName }) => {
+            const [message, setMessage] = React.useState('');
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                if (message.trim()) {
+                    onSend(message.trim());
+                }
+            };
+            
+            return (
+                <Modal isOpen={isOpen} onClose={onClose} maxWidth="max-w-md">
+                    <h2 className="text-2xl font-bold mb-4">Send Warning to {studentName}</h2>
+                    <form onSubmit={handleSubmit}>
+                        <div className="mb-4">
+                            <label htmlFor="warning-message" className="block text-sm font-medium text-gray-300">Warning Message</label>
+                            <textarea id="warning-message" rows={4} value={message} onChange={e => setMessage(e.target.value)} required className="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-yellow-500 focus:border-yellow-500 sm:text-sm text-white" placeholder="e.g., Please look at the screen." />
+                        </div>
+                        <div className="flex justify-end space-x-4">
+                            <button type="button" onClick={onClose} className="py-2 px-4 bg-gray-600 text-gray-200 rounded-md hover:bg-gray-500">Cancel</button>
+                            <button type="submit" className="py-2 px-4 bg-yellow-600 text-white rounded-md hover:bg-yellow-700">Send Warning</button>
+                        </div>
+                    </form>
+                </Modal>
+            );
+        };
+
+        const AdminLoginModal = ({ isOpen, onClose, onLogin }) => {
+            const [id, setId] = React.useState('');
+            const [password, setPassword] = React.useState('');
+            const [error, setError] = React.useState('');
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                // In a real application, this would be a secure API call.
+                if (id === '92345055' && password === '92345055') {
+                    setError('');
+                    onLogin();
+                } else {
+                    setError('Invalid credentials. Please try again.');
+                }
+            };
+            
+            return (
+                <Modal isOpen={isOpen} onClose={onClose} maxWidth="max-w-md">
+                    <h2 className="text-2xl font-bold text-center text-gray-100 mb-6">Admin Login</h2>
+                    <form onSubmit={handleSubmit}>
+                        <div className="mb-4">
+                            <label htmlFor="login-id" className="block text-sm font-medium text-gray-300">Login ID</label>
+                            <input type="text" id="login-id" value={id} onChange={e => setId(e.target.value)} required className="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-white" />
+                        </div>
+                        <div className="mb-6">
+                            <label htmlFor="login-password" className="block text-sm font-medium text-gray-300">Password</label>
+                            <input type="password" id="login-password" value={password} onChange={e => setPassword(e.target.value)} required className="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-white" />
+                        </div>
+                        <p className="text-red-500 text-sm text-center mb-4 h-5">{error}</p>
+                        <div className="flex items-center space-x-4">
+                            <button type="button" onClick={onClose} className="w-full py-3 px-4 bg-gray-600 text-gray-200 font-semibold rounded-md hover:bg-gray-500">Cancel</button>
+                            <button type="submit" className="w-full py-3 px-4 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700">Login</button>
+                        </div>
+                    </form>
+                </Modal>
+            );
+        };
+
+        const QuestionModal = ({ isOpen, onClose, onSave, questionToEdit, subjectName }) => {
+            const [q, setQ] = React.useState('');
+            const [options, setOptions] = React.useState(['', '', '', '']);
+            const [a, setA] = React.useState(null);
+
+            React.useEffect(() => {
+                if (isOpen && questionToEdit) {
+                    setQ(questionToEdit.q);
+                    setOptions(questionToEdit.o);
+                    setA(questionToEdit.a);
+                } else {
+                    setQ('');
+                    setOptions(['', '', '', '']);
+                    setA(null);
+                }
+            }, [isOpen, questionToEdit]);
+
+            const handleOptionChange = (index, value) => {
+                const newOptions = [...options];
+                newOptions[index] = value;
+                setOptions(newOptions);
+            };
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                if (a === null) return;
+                onSave({ q, o: options, a });
+            };
+
+            const modalTitle = questionToEdit ? `Edit Question in ${subjectName}` : `Add New Question to ${subjectName}`;
+            
+            return (
+                <Modal isOpen={isOpen} onClose={onClose}>
+                     <h2 className="text-2xl font-bold mb-4">{modalTitle}</h2>
+                    <form onSubmit={handleSubmit}>
+                        <div className="mb-4">
+                            <label htmlFor="question-text" className="block text-sm font-medium text-gray-300">Question</label>
+                            <textarea id="question-text" required rows={3} value={q} onChange={e => setQ(e.target.value)} className="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-white"></textarea>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            {options.map((opt, i) => (
+                                 <div key={i}>
+                                    <label htmlFor={`option-${i}`} className="block text-sm font-medium text-gray-300">Option {String.fromCharCode(65 + i)}</label>
+                                    <input type="text" id={`option-${i}`} required value={opt} onChange={e => handleOptionChange(i, e.target.value)} className="option-input mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-white" />
+                                </div>
+                            ))}
+                        </div>
+                        <div className="mb-6">
+                            <label className="block text-sm font-medium text-gray-300">Correct Answer</label>
+                            <div className="mt-2 flex flex-wrap gap-x-6 gap-y-2">
+                                 {options.map((_, i) => (
+                                     <label key={i} className="flex items-center">
+                                        <input type="radio" name="correct-answer" value={i} required checked={a === i} onChange={() => setA(i)} className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500" />
+                                        <span className="ml-2">Option {String.fromCharCode(65 + i)}</span>
+                                    </label>
+                                 ))}
+                            </div>
+                        </div>
+                        <div className="flex justify-end space-x-4">
+                            <button type="button" onClick={onClose} className="py-2 px-4 bg-gray-600 text-gray-200 rounded-md hover:bg-gray-500">Cancel</button>
+                            <button type="submit" className="py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700">Save Question</button>
+                        </div>
+                    </form>
+                </Modal>
+            );
+        };
+
+        const SubjectModal = ({ isOpen, onClose, onSave }) => {
+            const [name, setName] = React.useState('');
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                if (name.trim()) {
+                    onSave(name.trim());
+                    setName('');
+                }
+            };
+            
+            return (
+                <Modal isOpen={isOpen} onClose={onClose} maxWidth="max-w-md">
+                    <h2 className="text-2xl font-bold mb-4">Add New Subject</h2>
+                    <form onSubmit={handleSubmit}>
+                        <div className="mb-4">
+                            <label htmlFor="subject-name" className="block text-sm font-medium text-gray-300">Subject Name</label>
+                            <input type="text" id="subject-name" value={name} onChange={e => setName(e.target.value)} required className="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-white" />
+                        </div>
+                        <div className="flex justify-end space-x-4">
+                            <button type="button" onClick={onClose} className="py-2 px-4 bg-gray-600 text-gray-200 rounded-md hover:bg-gray-500">Cancel</button>
+                            <button type="submit" className="py-2 px-4 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">Add Subject</button>
+                        </div>
+                    </form>
+                </Modal>
+            );
+        };
+
+        const QuizNameModal = ({ isOpen, onClose, onSave, currentName }) => {
+            const [name, setName] = React.useState(currentName);
+
+            React.useEffect(() => {
+                if(isOpen) {
+                    setName(currentName);
+                }
+            }, [isOpen, currentName]);
+            
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                if (name.trim()) {
+                    onSave(name.trim());
+                }
+            };
+            
+            return (
+                <Modal isOpen={isOpen} onClose={onClose} maxWidth="max-w-md">
+                    <h2 className="text-2xl font-bold mb-4">Edit Quiz Name</h2>
+                    <form onSubmit={handleSubmit}>
+                        <div className="mb-4">
+                            <label htmlFor="quiz-name-input" className="block text-sm font-medium text-gray-300">Quiz Name</label>
+                            <input type="text" id="quiz-name-input" value={name} onChange={e => setName(e.target.value)} required className="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm text-white" />
+                        </div>
+                        <div className="flex justify-end space-x-4">
+                            <button type="button" onClick={onClose} className="py-2 px-4 bg-gray-600 text-gray-200 rounded-md hover:bg-gray-500">Cancel</button>
+                            <button type="submit" className="py-2 px-4 bg-purple-600 text-white rounded-md hover:bg-purple-700">Save Name</button>
+                        </div>
+                    </form>
+                </Modal>
+            );
+        };
+
+        const ReportDetailsModal = ({ isOpen, onClose, report, quizData }) => {
+            if (!isOpen || !report) return null;
+
+            if (!report.userAnswers) {
+                return (
+                    <Modal isOpen={isOpen} onClose={onClose} maxWidth="max-w-md">
+                        <h2 className="text-2xl font-bold mb-4">Report Details</h2>
+                        <p className="text-gray-300">Detailed answer data is not available for this legacy report.</p>
+                        <div className="flex justify-end mt-6">
+                            <button onClick={onClose} className="py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700">Close</button>
+                        </div>
+                    </Modal>
+                );
+            }
+
+            return (
+                <Modal isOpen={isOpen} onClose={onClose} maxWidth="max-w-4xl">
+                    <div className="p-2">
+                        <h2 className="text-2xl font-bold mb-4">Exam Report for {report.userInfo.name}</h2>
+                        <div className="space-y-6 max-h-[70vh] overflow-y-auto pr-4">
+                            {Object.keys(quizData).map(subject => (
+                                quizData[subject].questions.length > 0 && (
+                                    <div key={subject}>
+                                        <h3 className="text-xl font-bold border-b-2 border-gray-700 pb-2 mb-4">{subject}</h3>
+                                        <div className="space-y-4">
+                                            {quizData[subject].questions.map((q, i) => {
+                                                const userAnswerData = report.userAnswers[subject]?.[i];
+                                                const studentAnswerIndex = userAnswerData?.answer;
+                                                const isCorrect = studentAnswerIndex === q.a;
+                                                const wrapperClass = studentAnswerIndex !== null
+                                                    ? (isCorrect ? 'bg-green-900/40 border-green-700' : 'bg-red-900/40 border-red-700')
+                                                    : 'bg-gray-700/50 border-gray-600';
+
+                                                return (
+                                                    <div key={i} className={`p-4 rounded-lg border ${wrapperClass}`}>
+                                                        <p className="font-semibold mb-3">Q{i + 1}: {q.q}</p>
+                                                        <div className="text-sm space-y-2">
+                                                            <p>
+                                                                <span className="font-medium">Student's Answer: </span>
+                                                                {studentAnswerIndex !== null && studentAnswerIndex >= 0 && studentAnswerIndex < q.o.length ? (
+                                                                    <span className={isCorrect ? 'text-green-300' : 'text-red-300'}>
+                                                                        {q.o[studentAnswerIndex]}
+                                                                    </span>
+                                                                ) : (
+                                                                    <span className="text-gray-400 italic">Not Answered</span>
+                                                                )}
+                                                            </p>
+                                                            <p>
+                                                                <span className="font-medium">Correct Answer: </span>
+                                                                <span className="text-green-300">{q.o[q.a]}</span>
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                )
+                            ))}
+                        </div>
+                         <div className="flex justify-end mt-6">
+                            <button onClick={onClose} className="py-2 px-6 bg-blue-600 text-white rounded-md hover:bg-blue-700">Close</button>
+                        </div>
+                    </div>
+                </Modal>
+            );
+        };
+        
+        // --- Registration Panel ---
+        const RegistrationScreen = ({ onRegister }) => {
+            const { quizTitle, registrationDate } = useQuiz();
+            const [name, setName] = React.useState('');
+            const [email, setEmail] = React.useState('');
+            const [phone, setPhone] = React.useState('');
+            const [dob, setDob] = React.useState('');
+            const [qualifications, setQualifications] = React.useState('');
+
+            const qualificationOptions = [
+                "B.Tech in Electrical Engineering",
+                "B.Tech in Mechanical Engineering",
+                "B.Tech in Electrical and Electronic Communication",
+                "B.Tech in Civil",
+                "B.Tech + Diploma",
+                "12th",
+                "10th",
+                "Diploma"
+            ];
+
+            const { isRegistrationOpen, message } = React.useMemo(() => {
+                if (!registrationDate) {
+                    return { 
+                        isRegistrationOpen: false, 
+                        message: "Registration is currently closed. The administrator has not set a registration date." 
+                    };
+                }
+                
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+
+                const regDate = new Date(registrationDate + 'T00:00:00');
+                
+                const isOpen = today.getTime() === regDate.getTime();
+                
+                let msg;
+                if (isOpen) {
+                    msg = `Registration is open for today: ${regDate.toLocaleDateString()}`;
+                } else if (today < regDate) {
+                    msg = `Registration will open on ${regDate.toLocaleDateString()}. Please return on that day.`;
+                } else {
+                    msg = `Registration was on ${regDate.toLocaleDateString()} and is now closed.`;
+                }
+
+                return {
+                    isRegistrationOpen: isOpen,
+                    message: msg
+                };
+            }, [registrationDate]);
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                if (!isRegistrationOpen) return;
+                onRegister({ name, email, phone, qualifications, dob, rollNumber: email });
+            };
+
+            return (
+                <section className="bg-gray-800 p-8 rounded-lg shadow-lg max-w-2xl mx-auto">
+                    <h1 className="text-3xl font-bold text-center text-blue-400 mb-2">{quizTitle}</h1>
+                    <p className="text-center text-gray-400 mb-8">
+                        {message}
+                    </p>
+                    <div className="mb-6 p-4 bg-yellow-900/50 border-l-4 border-yellow-500 text-yellow-200 rounded-r-lg">
+                        <p className="font-bold">Attention:</p>
+                        <p className="mt-1">Once you register with your email ID, you can only take the exam once using that same email ID. After you have taken the exam once, you will not be able to take it again with the same email ID.</p>
+                    </div>
+                    <form onSubmit={handleSubmit}>
+                        <fieldset disabled={!isRegistrationOpen} className="space-y-4">
+                            <div>
+                                <label htmlFor="name" className="block text-sm font-medium text-gray-300">Full Name</label>
+                                <input type="text" id="name" value={name} onChange={e => setName(e.target.value)} required className="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50" />
+                            </div>
+                            <div>
+                                <label htmlFor="email" className="block text-sm font-medium text-gray-300">Email Address</label>
+                                <input type="email" id="email" value={email} onChange={e => setEmail(e.target.value)} required className="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50" />
+                            </div>
+                            <div>
+                                <label htmlFor="phone" className="block text-sm font-medium text-gray-300">Mobile Number</label>
+                                <input type="tel" id="phone" value={phone} onChange={e => setPhone(e.target.value)} required className="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50" />
+                            </div>
+                             <div>
+                                <label htmlFor="dob" className="block text-sm font-medium text-gray-300">Date of Birth</label>
+                                <input type="date" id="dob" value={dob} onChange={e => setDob(e.target.value)} required className="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50" />
+                            </div>
+                            <div>
+                                <label htmlFor="qualifications" className="block text-sm font-medium text-gray-300">Qualification</label>
+                                <select id="qualifications" value={qualifications} onChange={e => setQualifications(e.target.value)} required className="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50">
+                                     <option value="" disabled>Select your qualification</option>
+                                    {qualificationOptions.map(option => (
+                                        <option key={option} value={option}>{option}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </fieldset>
+                        <div className="mt-8 text-center">
+                            <button type="submit" disabled={!isRegistrationOpen} className="w-full md:w-auto inline-flex justify-center py-3 px-6 border border-transparent shadow-sm text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed">
+                                {isRegistrationOpen ? 'Register' : 'Registration Closed'}
+                            </button>
+                        </div>
+                         {isRegistrationOpen && (
+                            <div className="mt-4 text-center">
+                                <p className="text-sm text-gray-400">
+                                    After registering, go to the 'Student View' to log in and start the exam.
+                                </p>
+                            </div>
+                        )}
+                    </form>
+                </section>
+            );
+        };
+        const RegistrationPanel = () => {
+            const { registerStudent } = useQuiz();
+            const handleRegister = (info) => {
+                registerStudent(info);
+            };
+            return <RegistrationScreen onRegister={handleRegister} />;
+        };
+
+        // --- Student Panel ---
+        const StudentLoginScreen = ({ onLogin }) => {
+            const { quizTitle, registeredStudents, showInfo, examDate, examStartTime, examEndTime, studentReports } = useQuiz();
+            const [email, setEmail] = React.useState('');
+            const [dob, setDob] = React.useState('');
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                
+                if (examDate) {
+                    const now = new Date();
+                    const examDay = new Date(examDate + 'T00:00:00');
+
+                    if (now.getFullYear() !== examDay.getFullYear() ||
+                        now.getMonth() !== examDay.getMonth() ||
+                        now.getDate() !== examDay.getDate()) {
+                        showInfo(`The exam is scheduled for ${examDay.toLocaleDateString()}. Please return on that day.`);
+                        return;
+                    }
+
+                    if (examStartTime && examEndTime) {
+                        const examStartDateTime = new Date(`${examDate}T${examStartTime}`);
+                        const examEndDateTime = new Date(`${examDate}T${examEndTime}`);
+
+                        if (now < examStartDateTime) {
+                            showInfo(`The exam starts at ${examStartDateTime.toLocaleTimeString([], { hour: '2-digit', minute:'2-digit' })} today. Please come back then.`);
+                            return;
+                        }
+                        if (now > examEndDateTime) {
+                            showInfo(`The exam window closed at ${examEndDateTime.toLocaleTimeString([], { hour: '2-digit', minute:'2-digit' })} today.`);
+                            return;
+                        }
+                    }
+                }
+                
+                const student = registeredStudents.find(s => s.email.toLowerCase() === email.toLowerCase());
+                if (student) {
+                    if (student.dob !== dob) {
+                        showInfo("Invalid credentials. The Email and Date of Birth do not match our records.");
+                        return;
+                    }
+
+                    const hasTakenExam = studentReports.some(report => report.userInfo.email.toLowerCase() === student.email.toLowerCase());
+                    if (hasTakenExam) {
+                        showInfo("You have already completed the exam with this email ID. You cannot take it again.");
+                        return;
+                    }
+                    onLogin(student);
+                } else {
+                    showInfo("Email not found. Please use the 'Registration' tab to create an account.");
+                }
+            };
+
+            return (
+                <section className="bg-gray-800 p-8 rounded-lg shadow-lg max-w-lg mx-auto">
+                    <h1 className="text-3xl font-bold text-center text-blue-400 mb-2">{quizTitle}</h1>
+                    <p className="text-center text-gray-400 mb-8">Login to start your exam</p>
+                    <form onSubmit={handleSubmit}>
+                        <div className="space-y-4">
+                            <div>
+                                <label htmlFor="login-email" className="block text-sm font-medium text-gray-300">Email Address</label>
+                                <input type="email" id="login-email" value={email} onChange={e => setEmail(e.target.value)} required className="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" />
+                            </div>
+                             <div>
+                                <label htmlFor="login-dob" className="block text-sm font-medium text-gray-300">Date of Birth</label>
+                                <input type="date" id="login-dob" value={dob} onChange={e => setDob(e.target.value)} required className="mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" />
+                            </div>
+                        </div>
+                        <div className="mt-8 text-center">
+                            <button type="submit" className="w-full md:w-auto inline-flex justify-center py-3 px-6 border border-transparent shadow-sm text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">Login</button>
+                        </div>
+                        <div className="mt-4 text-center">
+                            <p className="text-sm text-gray-400">
+                                Don't have an account? Use the 'Registration' tab at the top to sign up.
+                            </p>
+                        </div>
+                    </form>
+                </section>
+            );
+        };
+        const Instructions = ({ onStart, totalQuestions, userName, quizDuration }) => (
+            <section className="bg-gray-800 p-8 rounded-lg shadow-lg max-w-2xl mx-auto">
+                <h2 className="text-2xl font-bold text-center mb-2">Quiz Instructions</h2>
+                <p className="text-center text-gray-400 mb-6">Welcome, {userName}!</p>
+                <div className="space-y-4 text-gray-300">
+                    <p><strong>Total Duration:</strong> {quizDuration / 60} minutes.</p>
+                    <p><strong>Total Questions:</strong> {totalQuestions}</p>
+                    <div><strong>Marking Scheme:</strong><ul className="list-disc list-inside ml-4 mt-2"><li>Correct: +1 mark</li><li>Incorrect: -1 mark</li><li>Unattempted: 0 marks</li></ul></div>
+                    <div className="mt-4 p-4 bg-yellow-900/50 border-l-4 border-yellow-500 text-yellow-200">
+                        <h4 className="font-bold">Important Rules</h4>
+                        <ul className="list-disc list-inside ml-4 mt-2">
+                            <li>This exam must be taken in full-screen mode.</li>
+                            <li>Your webcam will be used for proctoring.</li>
+                            <li>Do not switch tabs or minimize the browser. Doing so will trigger warnings, penalties, and could lead to disqualification.</li>
+                            <li>Do not close or refresh this page. You will be prompted for confirmation if you attempt to.</li>
+                        </ul>
+                    </div>
+                     <div className="mt-6">
+                        <div className="flex items-start">
+                            <input id="instructions-acceptance" type="checkbox" required className="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300 rounded" />
+                            <div className="ml-3 text-sm"><label htmlFor="instructions-acceptance" className="font-medium text-gray-300">I have read and understood all instructions.</label></div>
+                        </div>
+                    </div>
+                </div>
+                <div className="mt-8 text-center"><button onClick={onStart} className="w-full md:w-auto py-3 px-6 text-base font-medium rounded-md text-white bg-green-600 hover:bg-green-700"><i className="fas fa-video mr-2"></i>Enable Webcam & Start</button></div>
+            </section>
+        );
+        const DisqualificationScreen = ({ reason }) => {
+            React.useEffect(() => {
+                const timer = setTimeout(() => { window.close(); }, 8000);
+                return () => clearTimeout(timer);
+            }, []);
+
+            return (
+                <section className="bg-red-900/50 border-2 border-red-700 p-8 rounded-lg shadow-lg max-w-2xl mx-auto text-center">
+                    <div className="text-red-400 mb-4"><i className="fas fa-ban fa-4x"></i></div>
+                    <h2 className="text-3xl font-bold text-white mb-4">You have been Disqualified</h2>
+                    <p className="text-lg text-red-200 mb-2">Your exam has been cancelled.</p>
+                    <p className="text-md text-gray-300 mb-6">Reason: {reason}</p>
+                    <p className="text-sm text-gray-400">This window will attempt to close automatically.</p>
+                </section>
+            );
+        };
+        const StudentPanel = () => {
+            const { quizData, quizTitle, saveStudentReport, showInfo, quizDuration, setView } = useQuiz();
+            const [step, setStep] = React.useState('login');
+            const [userInfo, setUserInfo] = React.useState(null);
+            const [userAnswers, setUserAnswers] = React.useState({});
+            const [currentSubject, setCurrentSubject] = React.useState('');
+            const [currentQuestionIndex, setCurrentQuestionIndex] = React.useState(0);
+            const [allQuestionsMap, setAllQuestionsMap] = React.useState([]);
+            const [timeLeft, setTimeLeft] = React.useState(quizDuration);
+            const [timerActive, setTimerActive] = React.useState(false);
+            const timerIntervalRef = React.useRef(null);
+            const proctoringIntervalRef = React.useRef(null);
+            const webcamStreamRef = React.useRef(null);
+            const webcamFeedRef = React.useRef(null);
+            const [isExitConfirmOpen, setIsExitConfirmOpen] = React.useState(false);
+            const [isSubmitConfirmOpen, setIsSubmitConfirmOpen] = React.useState(false);
+            const [violationCount, setViolationCount] = React.useState(0);
+            const [isViolationModalOpen, setIsViolationModalOpen] = React.useState(false);
+            const [violationMessage, setViolationMessage] = React.useState('');
+            const [disqualificationReason, setDisqualificationReason] = React.useState('');
+            const [redirectCountdown, setRedirectCountdown] = React.useState(15);
+            
+            const userAnswersRef = React.useRef(userAnswers);
+            userAnswersRef.current = userAnswers;
+            const violationCountRef = React.useRef(violationCount);
+            violationCountRef.current = violationCount;
+
+            React.useEffect(() => {
+                const handleBeforeUnload = (e) => {
+                    if (!timerActive) return;
+                    e.preventDefault();
+                    e.returnValue = 'Are you sure you want to leave? Your quiz progress will be submitted.';
+                };
+                window.addEventListener('beforeunload', handleBeforeUnload);
+                return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+            }, [timerActive]);
+
+            const cleanupProctoringData = (email) => {
+                if (!email) return;
+                try {
+                    const sessionsData = localStorage.getItem('proctoring_sessions');
+                    if (sessionsData) {
+                        const sessions = JSON.parse(sessionsData);
+                        if (sessions[email]) {
+                            delete sessions[email];
+                            localStorage.setItem('proctoring_sessions', JSON.stringify(sessions));
+                        }
+                    }
+                    const actionsData = localStorage.getItem('proctoring_actions');
+                    if (actionsData) {
+                        const actions = JSON.parse(actionsData);
+                        if (actions[email]) {
+                            delete actions[email];
+                            localStorage.setItem('proctoring_actions', JSON.stringify(actions));
+                        }
+                    }
+                } catch (error) { console.error("Error cleaning up proctoring data:", error); }
+            };
+
+            const totalQuestions = React.useMemo(() => Object.values(quizData).reduce((sum, subject) => sum + (subject.questions ? subject.questions.length : 0), 0), [quizData]);
+
+            React.useEffect(() => {
+                if (!timerActive) setTimeLeft(quizDuration);
+            }, [quizDuration, timerActive]);
+
+            const stopAllIntervals = React.useCallback(() => {
+                if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+                if (proctoringIntervalRef.current) clearInterval(proctoringIntervalRef.current);
+                timerIntervalRef.current = null;
+                proctoringIntervalRef.current = null;
+                setTimerActive(false);
+            }, []);
+
+            const calculateAndSaveReport = React.useCallback((status, reason) => {
+                if (!userInfo) return;
+                const currentAnswers = userAnswersRef.current;
+                const currentViolations = violationCountRef.current;
+                let score = 0, correct = 0, attempted = 0;
+                Object.keys(quizData).forEach(subject => {
+                    quizData[subject].questions.forEach((q, i) => {
+                        const userAnswer = currentAnswers[subject]?.[i];
+                        if (userAnswer && userAnswer.answer !== null) {
+                            attempted++;
+                            if (userAnswer.answer === q.a) { score++; correct++; } 
+                            else { score--; }
+                        }
+                    });
+                });
+                saveStudentReport({ userInfo, score, attempted, unattempted: allQuestionsMap.length - attempted, correct, incorrect: attempted - correct, violations: currentViolations, status, terminationReason: reason, userAnswers: currentAnswers });
+            }, [userInfo, quizData, saveStudentReport, allQuestionsMap]);
+            
+            const exitQuiz = React.useCallback(() => {
+                stopAllIntervals();
+                cleanupProctoringData(userInfo?.email || null);
+                if (webcamStreamRef.current) webcamStreamRef.current.getTracks().forEach(track => track.stop());
+                webcamStreamRef.current = null;
+                setView('registration');
+            }, [stopAllIntervals, userInfo, setView]);
+
+            const disqualifyUser = React.useCallback((reason) => {
+                stopAllIntervals();
+                calculateAndSaveReport('Terminated', reason);
+                setDisqualificationReason(reason);
+                cleanupProctoringData(userInfo?.email || null);
+                if (webcamStreamRef.current) webcamStreamRef.current.getTracks().forEach(track => track.stop());
+                if (document.fullscreenElement) document.exitFullscreen().catch(err => console.error("Could not exit fullscreen", err));
+                setStep('disqualified');
+            }, [stopAllIntervals, calculateAndSaveReport, userInfo]);
+
+            const endQuiz = React.useCallback(() => {
+                stopAllIntervals();
+                calculateAndSaveReport('Completed', null);
+                cleanupProctoringData(userInfo?.email || null);
+                if (webcamStreamRef.current) webcamStreamRef.current.getTracks().forEach(track => track.stop());
+                setStep('result');
+            }, [stopAllIntervals, calculateAndSaveReport, userInfo]);
+            
+            const endQuizRef = React.useRef(endQuiz);
+            endQuizRef.current = endQuiz;
+            const disqualifyUserRef = React.useRef(disqualifyUser);
+            disqualifyUserRef.current = disqualifyUser;
+
+            React.useEffect(() => {
+                if (step === 'quiz' && webcamFeedRef.current && webcamStreamRef.current) {
+                    webcamFeedRef.current.srcObject = webcamStreamRef.current;
+                }
+            }, [step]);
+            
+            React.useEffect(() => {
+                if (timerActive && userInfo) {
+                    const canvas = document.createElement('canvas');
+                    const context = canvas.getContext('2d');
+                    canvas.width = 320;
+                    canvas.height = 240;
+
+                    proctoringIntervalRef.current = window.setInterval(() => {
+                        if (webcamFeedRef.current && webcamFeedRef.current.readyState >= 2 && context) {
+                            context.drawImage(webcamFeedRef.current, 0, 0, canvas.width, canvas.height);
+                            const snapshot = canvas.toDataURL('image/jpeg', 0.5);
+                            try {
+                                const sessionsData = localStorage.getItem('proctoring_sessions') || '{}';
+                                const sessions = JSON.parse(sessionsData);
+                                sessions[userInfo.email] = { userInfo, violationCount, webcamSnapshot: snapshot, lastSeen: Date.now() };
+                                localStorage.setItem('proctoring_sessions', JSON.stringify(sessions));
+                            } catch (e) { console.error("Could not update proctoring session", e); }
+                        }
+                        try {
+                            const actionsData = localStorage.getItem('proctoring_actions') || '{}';
+                            const actions = JSON.parse(actionsData);
+                            if (actions[userInfo.email]) {
+                                const action = actions[userInfo.email];
+                                delete actions[userInfo.email];
+                                localStorage.setItem('proctoring_actions', JSON.stringify(actions));
+                                if (action.action === 'terminate') disqualifyUserRef.current('Terminated by Administrator.');
+                                else if (action.action === 'warn' && action.message) showInfo(`Admin Warning: ${action.message}`);
+                            }
+                        } catch(e) { console.error("Could not check for proctoring actions", e); }
+                    }, 5000);
+                }
+                return () => { if (proctoringIntervalRef.current) clearInterval(proctoringIntervalRef.current); };
+            }, [timerActive, userInfo, violationCount, showInfo]);
+            
+            React.useEffect(() => {
+                if (step === 'answer-review') {
+                    setRedirectCountdown(15);
+                    const interval = setInterval(() => {
+                        setRedirectCountdown(prev => {
+                            if (prev <= 1) { clearInterval(interval); exitQuiz(); return 0; }
+                            return prev - 1;
+                        });
+                    }, 1000);
+                    return () => clearInterval(interval);
+                }
+            }, [step, exitQuiz]);
+
+            React.useEffect(() => {
+                const handleViolation = () => {
+                     if (document.fullscreenElement) document.exitFullscreen().catch(err => console.error("Could not exit fullscreen to show warning", err));
+                    setViolationCount(prevCount => {
+                        const newCount = prevCount + 1;
+                        switch (newCount) {
+                            case 1: setViolationMessage("First Warning: Please do not switch tabs or minimize the window. Stay focused on the exam."); setIsViolationModalOpen(true); break;
+                            case 2: setViolationMessage("Second Warning: Another violation will result in a final warning before penalties are applied."); setIsViolationModalOpen(true); break;
+                            case 3: setViolationMessage("Final Warning: Any further violation will result in a 5-minute time deduction."); setIsViolationModalOpen(true); break;
+                            case 4: setTimeLeft(prevTime => Math.max(0, prevTime - 300)); setViolationMessage("Penalty Applied: 5 minutes have been deducted from your time. Further violations will lead to disqualification."); setIsViolationModalOpen(true); break;
+                            default: disqualifyUserRef.current("Exceeded violation limit (5 violations)."); break;
+                        }
+                        return newCount;
+                    });
+                }
+                const handleVisibilityChange = () => { if (document.hidden && timerActive) handleViolation(); };
+                const handleFullscreenChange = () => { if (!document.fullscreenElement && timerActive) handleViolation(); }
+
+                if (timerActive) {
+                    document.addEventListener('visibilitychange', handleVisibilityChange);
+                    document.addEventListener('fullscreenchange', handleFullscreenChange);
+                }
+                return () => {
+                    document.removeEventListener('visibilitychange', handleVisibilityChange);
+                    document.removeEventListener('fullscreenchange', handleFullscreenChange);
+                };
+            }, [timerActive]);
+            
+            const startTimer = () => {
+                setTimerActive(true);
+                timerIntervalRef.current = window.setInterval(() => {
+                    setTimeLeft(prevTime => {
+                        if (prevTime <= 1) {
+                            showInfo('Time is up! Your quiz will be submitted automatically.');
+                            endQuizRef.current();
+                            return 0;
+                        }
+                        return prevTime - 1;
+                    });
+                }, 1000);
+            };
+            
+            const initializeQuizForUser = (user) => {
+                setUserInfo(user);
+                const initialAnswers = {};
+                const qMap = [];
+                let globalIndex = 0;
+                Object.keys(quizData).forEach(subject => {
+                    initialAnswers[subject] = Array(quizData[subject].questions.length).fill(null).map(() => ({ answer: null, isReviewed: false }));
+                    quizData[subject].questions.forEach((_q, index) => {
+                        qMap.push({ subject, questionIndex: index, globalIndex });
+                        globalIndex++;
+                    });
+                });
+                setUserAnswers(initialAnswers);
+                setAllQuestionsMap(qMap);
+                setStep('instructions');
+            };
+
+            const startWebcamAndQuiz = async () => {
+                try {
+                    await document.documentElement.requestFullscreen();
+                } catch (fsError) {
+                    showInfo("Fullscreen mode is mandatory for this exam. Please allow it and try again.");
+                    return;
+                }
+                try {
+                    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                        webcamStreamRef.current = stream;
+                        setStep('subject-selection');
+                    } else {
+                        showInfo("Webcam not supported. Cannot start quiz.");
+                        if (document.fullscreenElement) document.exitFullscreen().catch();
+                    }
+                } catch (err) {
+                    showInfo("Webcam access is required. Please allow access and try again.");
+                    if (document.fullscreenElement) document.exitFullscreen().catch();
+                }
+            };
+
+            const handleSelectSubject = (subject) => {
+                setCurrentSubject(subject);
+                setCurrentQuestionIndex(0);
+                setStep('quiz');
+                startTimer();
+            };
+            const handleAnswerChange = (optionIndex) => setUserAnswers(prev => ({...prev, [currentSubject]: prev[currentSubject].map((ans, i) => i === currentQuestionIndex ? { ...ans, answer: optionIndex } : ans)}));
+            const handleClearResponse = () => setUserAnswers(prev => ({...prev, [currentSubject]: prev[currentSubject].map((ans, i) => i === currentQuestionIndex ? { ...ans, answer: null } : ans)}));
+            const handleMarkReview = () => setUserAnswers(prev => ({...prev, [currentSubject]: prev[currentSubject].map((ans, i) => i === currentQuestionIndex ? { ...ans, isReviewed: !ans.isReviewed } : ans)}));
+            const handleNavigateQuestion = (globalIndex) => { const targetQ = allQuestionsMap[globalIndex]; if (targetQ) { setCurrentSubject(targetQ.subject); setCurrentQuestionIndex(targetQ.questionIndex); }};
+            const handleNext = () => { const idx = allQuestionsMap.findIndex(q => q.subject === currentSubject && q.questionIndex === currentQuestionIndex); if (idx < allQuestionsMap.length - 1) handleNavigateQuestion(idx + 1); };
+            const handlePrev = () => { const idx = allQuestionsMap.findIndex(q => q.subject === currentSubject && q.questionIndex === currentQuestionIndex); if (idx > 0) handleNavigateQuestion(idx - 1); };
+
+            const renderStep = () => {
+                switch (step) {
+                    case 'login': return <StudentLoginScreen onLogin={initializeQuizForUser} />;
+                    case 'instructions': return <Instructions onStart={startWebcamAndQuiz} totalQuestions={totalQuestions} userName={userInfo?.name || 'Student'} quizDuration={quizDuration} />;
+                    case 'subject-selection':
+                        return (
+                            <section className="bg-gray-800 p-8 rounded-lg shadow-lg text-center max-w-3xl mx-auto">
+                                <h2 className="text-2xl font-bold mb-6">Select Your Starting Subject</h2>
+                                <div className="flex flex-wrap justify-center items-center gap-4">
+                                    {Object.keys(quizData).map(subject => (
+                                        <button key={subject} onClick={() => handleSelectSubject(subject)} className="subject-choice-btn w-full md:w-48 py-4 px-6 border-2 border-gray-600 rounded-lg text-lg font-semibold hover:bg-blue-900/50 hover:border-blue-500">
+                                            <i className="fas fa-book mr-2"></i>{subject}
+                                        </button>
+                                    ))}
+                                </div>
+                            </section>
+                        );
+                    case 'quiz': {
+                        const qData = quizData[currentSubject]?.questions[currentQuestionIndex];
+                        const ansData = userAnswers[currentSubject]?.[currentQuestionIndex];
+                        if (!qData || !ansData) return <div>Loading...</div>;
+                        const currentGlobalIndex = allQuestionsMap.findIndex(q => q.subject === currentSubject && q.questionIndex === currentQuestionIndex);
+                        return (
+                            <section>
+                                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                                    <div className="lg:col-span-3">
+                                        <div className="bg-gray-800 p-4 rounded-t-lg shadow-md flex flex-wrap justify-between items-center gap-4">
+                                            <div className="flex items-center space-x-2 flex-wrap gap-y-2">
+                                                {Object.keys(quizData).map(subject => (
+                                                    <button key={subject} onClick={() => { setCurrentSubject(subject); setCurrentQuestionIndex(0);}} className={`py-2 px-4 rounded-md text-sm font-medium ${currentSubject === subject ? 'bg-blue-600 text-white' : 'bg-gray-700'}`}>{subject}</button>
+                                                ))}
+                                            </div>
+                                            <div className="flex items-center space-x-4">
+                                                <div id="global-timer-container" className={`text-lg font-semibold p-2 rounded-md bg-gray-700 ${timeLeft <= 300 && timeLeft > 60 ? 'timer-warning' : ''} ${timeLeft <= 60 ? 'timer-final-warning' : ''}`}>
+                                                    Time Left: <span className="font-mono">{`${String(Math.floor(timeLeft / 60)).padStart(2, '0')}:${String(timeLeft % 60).padStart(2, '0')}`}</span>
+                                                </div>
+                                                <button onClick={() => setIsExitConfirmOpen(true)} className="py-2 px-4 bg-gray-600 text-white rounded-md text-sm font-medium hover:bg-gray-700">Exit</button>
+                                                <button onClick={() => setStep('review')} className="py-2 px-4 bg-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700">Submit Quiz</button>
+                                            </div>
+                                        </div>
+                                        <div className="bg-gray-800 p-6 rounded-b-lg shadow-lg">
+                                            <div className="mb-6">
+                                                <p className="text-lg font-medium mb-1">{currentSubject} - Question {currentQuestionIndex + 1}/{quizData[currentSubject].questions.length}</p>
+                                                <p className="text-xl font-semibold mb-4">{qData.q}</p>
+                                                <div className="space-y-3">
+                                                    {qData.o.map((option, i) => (
+                                                        <label key={i} className="flex items-center p-3 rounded-lg border border-gray-700 hover:bg-gray-700/50 cursor-pointer has-[:checked]:bg-blue-900/50 has-[:checked]:border-blue-500">
+                                                            <input type="radio" name="option" value={i} checked={ansData.answer === i} onChange={() => handleAnswerChange(i)} className="h-4 w-4 text-blue-600" />
+                                                            <span className="ml-3">{option}</span>
+                                                        </label>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                            <div className="flex flex-wrap justify-between items-center gap-4">
+                                                <div>
+                                                    <button onClick={handlePrev} disabled={currentGlobalIndex === 0} className="py-2 px-4 bg-gray-700 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"><i className="fas fa-arrow-left mr-2"></i>Previous</button>
+                                                    <button onClick={handleNext} className="py-2 px-4 bg-blue-600 text-white rounded-md ml-2">{currentGlobalIndex === allQuestionsMap.length - 1 ? 'Finish' : 'Next'}<i className="fas fa-arrow-right ml-2"></i></button>
+                                                </div>
+                                                <div>
+                                                    <button onClick={handleMarkReview} className="py-2 px-4 bg-yellow-400 text-gray-800 rounded-md"><i className="fas fa-flag mr-2"></i>{ansData.isReviewed ? 'Unmark' : 'Mark for Review'}</button>
+                                                    <button onClick={handleClearResponse} className="py-2 px-4 bg-gray-500 text-white rounded-md ml-2"><i className="fas fa-times mr-2"></i>Clear</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="lg:col-span-1 bg-gray-800 p-4 rounded-lg shadow-lg flex flex-col sticky top-20 max-h-[calc(100vh-6.5rem)]">
+                                        <div className="mb-4 flex-shrink-0">
+                                            <video ref={webcamFeedRef} autoPlay muted playsInline className="w-full rounded-lg bg-gray-900 aspect-video"></video>
+                                        </div>
+                                        <h3 className="text-lg font-bold mb-4 text-center flex-shrink-0">Question Palette</h3>
+                                        <div className="flex-grow overflow-y-auto question-palette-scrollbar pr-2">
+                                            <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-7 lg:grid-cols-5 gap-2">
+                                                {allQuestionsMap.map(({ subject, questionIndex, globalIndex }) => {
+                                                    const ans = userAnswers[subject]?.[questionIndex];
+                                                    let statusClass = 'status-not-answered';
+                                                    if (ans) {
+                                                        if (ans.answer !== null) { statusClass = ans.isReviewed ? 'status-answered-review' : 'status-answered'; }
+                                                        else { statusClass = ans.isReviewed ? 'status-review' : 'status-not-answered'; }
+                                                    }
+                                                    const isCurrent = subject === currentSubject && questionIndex === currentQuestionIndex;
+                                                    return (
+                                                        <div key={globalIndex} onClick={() => handleNavigateQuestion(globalIndex)} className={`question-status-grid-item ${statusClass} ${isCurrent ? 'ring-2 ring-offset-2 ring-yellow-400 ring-offset-gray-800' : ''}`}>
+                                                            {globalIndex + 1}
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    </div>
+                                 </div>
+                            </section>
+                        );
+                    }
+                    case 'review': {
+                        let attempted = 0, marked = 0;
+                        allQuestionsMap.forEach(({ subject, questionIndex }) => {
+                            const ans = userAnswers[subject]?.[questionIndex];
+                            if(ans) {
+                                if (ans.answer !== null) attempted++;
+                                if (ans.isReviewed) marked++;
+                            }
+                        });
+
+                        return (
+                            <section className="bg-gray-800 p-8 rounded-lg shadow-lg max-w-4xl mx-auto">
+                                <h2 className="text-2xl font-bold text-center mb-6">Quiz Review</h2>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                                    <div><h3 className="text-lg font-semibold mb-2">Summary</h3><div className="space-y-2"><p>Total: {totalQuestions}</p><p>Attempted: {attempted}</p><p>Marked for Review: {marked}</p></div></div>
+                                    <div><h3 className="text-lg font-semibold mb-2">Time Remaining</h3><div className="text-2xl font-mono text-blue-400">{`${String(Math.floor(timeLeft / 60)).padStart(2, '0')}:${String(timeLeft % 60).padStart(2, '0')}`}</div></div>
+                                </div>
+                                <div className="mt-8 text-center">
+                                    <button onClick={() => setStep('quiz')} className="py-2 px-4 bg-gray-600 text-white rounded-md mr-4">Back to Quiz</button>
+                                    <button onClick={() => setIsSubmitConfirmOpen(true)} className="py-3 px-6 text-base font-medium rounded-md text-white bg-red-600">Submit Quiz</button>
+                                </div>
+                                 <ConfirmModal isOpen={isSubmitConfirmOpen} onClose={() => setIsSubmitConfirmOpen(false)} onConfirm={endQuiz} title="Final Submission" message="Are you sure you want to submit the quiz? You will not be able to change your answers after this." />
+                            </section>
+                        );
+                    }
+                    case 'result': {
+                        let score = 0, correct = 0, attempted = 0;
+                        const subjectBreakdown = {};
+                        Object.keys(quizData).forEach(subject => {
+                            subjectBreakdown[subject] = { score: 0, total: quizData[subject].questions.length };
+                            quizData[subject].questions.forEach((q, i) => {
+                                const userAnswer = userAnswers[subject]?.[i];
+                                if (userAnswer && userAnswer.answer !== null) {
+                                    attempted++;
+                                    if (userAnswer.answer === q.a) { score++; correct++; subjectBreakdown[subject].score++; } 
+                                    else { score--; subjectBreakdown[subject].score--; }
+                                }
+                            });
+                        });
+                        const incorrect = attempted - correct;
+                        return (
+                            <section className="bg-gray-800 p-8 rounded-lg shadow-lg max-w-4xl mx-auto">
+                                <h2 className="text-3xl font-bold text-center mb-2">Quiz Results</h2>
+                                <p className="text-center text-gray-500 mb-8">Well done, <span className="font-semibold">{userInfo?.name}</span>!</p>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    <div><h3 className="text-xl font-semibold mb-4">Performance</h3><div className="bg-gray-700/50 p-4 rounded-lg"><table className="w-full"><tbody><tr className="border-b dark:border-gray-700"><td className="py-2">Total Score</td><td className="text-right font-bold text-blue-400">{score}/{totalQuestions}</td></tr><tr><td className="py-2 text-green-400">Correct</td><td className="text-right font-semibold">{correct}</td></tr><tr><td className="py-2 text-red-600">Incorrect</td><td className="text-right font-semibold">{incorrect}</td></tr><tr><td className="py-2">Unattempted</td><td className="text-right font-semibold">{totalQuestions - attempted}</td></tr></tbody></table></div></div>
+                                    <div className="space-y-4"><h3 className="text-xl font-semibold mb-0">Subject Breakdown</h3>
+                                    {Object.entries(subjectBreakdown).map(([subject, data]) => (
+                                        <div key={subject} className="bg-gray-700/50 p-4 rounded-lg">
+                                            <h4 className="font-bold text-lg">{subject}</h4>
+                                            <p>Score: {data.score}/{data.total}</p>
+                                        </div>
+                                    ))}
+                                    </div>
+                                </div>
+                                <div className="mt-8 text-center"><button onClick={() => setStep('answer-review')} className="py-2 px-4 bg-blue-600 text-white rounded-md">Review Answers</button></div>
+                            </section>
+                        );
+                    }
+                    case 'answer-review':
+                        return (
+                             <section className="bg-gray-800 p-8 rounded-lg shadow-lg max-w-4xl mx-auto">
+                                <h2 className="text-3xl font-bold text-center mb-8">Answer Review</h2>
+                                <div className="space-y-8">
+                                    {Object.keys(quizData).map(subject => (
+                                        quizData[subject].questions.length > 0 && (
+                                        <div key={subject} className="mb-8">
+                                            <h3 className="text-2xl font-bold border-b-2 pb-2 mb-4">{subject}</h3>
+                                            {quizData[subject].questions.map((q, i) => {
+                                                const userAnswerData = userAnswers[subject]?.[i];
+                                                const isCorrect = userAnswerData?.answer === q.a;
+                                                const wrapperClass = userAnswerData?.answer !== null ? (isCorrect ? 'bg-green-900/50' : 'bg-red-900/50') : 'bg-gray-700/50';
+                                                return (
+                                                    <div key={i} className={`p-4 rounded-lg mb-4 ${wrapperClass}`}>
+                                                        <p className="font-semibold mb-2">Q{i + 1}: {q.q}</p>
+                                                        <p>Your Answer: <span className="font-medium">{userAnswerData?.answer !== null ? q.o[userAnswerData.answer] : 'N/A'}</span></p>
+                                                        <p>Correct Answer: <span className="font-medium text-green-400">{q.o[q.a]}</span></p>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                        )
+                                    ))}
+                                </div>
+                                <div className="mt-8 text-center"><p className="text-gray-400 text-lg">You will be returned to the main menu in {redirectCountdown} seconds...</p></div>
+                            </section>
+                        );
+                    case 'disqualified': return <DisqualificationScreen reason={disqualificationReason} />;
+                    default: return <div>Error: Unknown step.</div>;
+                }
+            };
+            return (
+                <div>
+                    {renderStep()}
+                    <ViolationWarningModal isOpen={isViolationModalOpen} onClose={() => { setIsViolationModalOpen(false); if (step !== 'disqualified') { document.documentElement.requestFullscreen().catch(err => { showInfo("Failed to re-enter fullscreen. Please do it manually (F11) to avoid further warnings."); }); } }} message={violationMessage} />
+                    <ConfirmModal isOpen={isExitConfirmOpen} onClose={() => setIsExitConfirmOpen(false)} onConfirm={exitQuiz} title="Exit Quiz" message="Are you sure you want to exit? Your progress will be lost and you will have to start over." />
+                </div>
+            );
+        };
+        
+        // --- Admin Panel ---
+        const ProctoringComponent = () => {
+            const [activeSessions, setActiveSessions] = React.useState([]);
+            const [isWarningModalOpen, setWarningModalOpen] = React.useState(false);
+            const [studentToWarn, setStudentToWarn] = React.useState(null);
+            const [isTerminateConfirmOpen, setTerminateConfirmOpen] = React.useState(false);
+            const [studentToTerminate, setStudentToTerminate] = React.useState(null);
+
+            React.useEffect(() => {
+                const interval = setInterval(() => {
+                    try {
+                        const sessionsData = localStorage.getItem('proctoring_sessions');
+                        if (sessionsData) {
+                            const sessions = JSON.parse(sessionsData);
+                            const now = Date.now();
+                            const currentSessions = Object.values(sessions).filter(session => now - session.lastSeen < 10000);
+                            setActiveSessions(currentSessions);
+                        } else { setActiveSessions([]); }
+                    } catch (error) { setActiveSessions([]); }
+                }, 3000);
+                return () => clearInterval(interval);
+            }, []);
+            
+            const sendProctorAction = (email, action) => {
+                try {
+                    const actionsData = localStorage.getItem('proctoring_actions') || '{}';
+                    const actions = JSON.parse(actionsData);
+                    actions[email] = action;
+                    localStorage.setItem('proctoring_actions', JSON.stringify(actions));
+                } catch (error) { console.error("Error sending proctor action:", error); }
+            };
+            
+            const handleOpenWarningModal = (userInfo) => { setStudentToWarn(userInfo); setWarningModalOpen(true); };
+            const handleSendWarning = (message) => { if (studentToWarn) { sendProctorAction(studentToWarn.email, { action: 'warn', message }); setWarningModalOpen(false); setStudentToWarn(null); } };
+            const handleOpenTerminateConfirm = (userInfo) => { setStudentToTerminate(userInfo); setTerminateConfirmOpen(true); };
+            const handleConfirmTerminate = () => { if (studentToTerminate) { sendProctorAction(studentToTerminate.email, { action: 'terminate' }); setTerminateConfirmOpen(false); setStudentToTerminate(null); } };
+
+            if (activeSessions.length === 0) return <p className="text-gray-400 text-center py-8">No students are currently active in the exam.</p>;
+
+            return (
+                <div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        {activeSessions.map(session => (
+                            <div key={session.userInfo.email} className="bg-gray-900 rounded-lg shadow-lg overflow-hidden border border-gray-700">
+                                <img src={session.webcamSnapshot} alt={`${session.userInfo.name}'s webcam feed`} className="w-full h-48 object-cover bg-gray-800" />
+                                <div className="p-4">
+                                    <h4 className="text-lg font-bold truncate">{session.userInfo.name}</h4>
+                                    <p className="text-sm text-gray-400">Roll: {session.userInfo.rollNumber}</p>
+                                    <div className={`mt-3 mb-3 flex items-center justify-center p-2 rounded-md ${session.violationCount > 0 ? 'bg-red-900/50' : 'bg-green-900/50'}`}>
+                                        <i className={`fas ${session.violationCount > 0 ? 'fa-exclamation-triangle text-red-400' : 'fa-check-circle text-green-400'} mr-2`}></i>
+                                        <span className="font-semibold">{session.violationCount} Violations</span>
+                                    </div>
+                                    <div className="flex justify-around items-center pt-2 border-t border-gray-700">
+                                        <button onClick={() => handleOpenWarningModal(session.userInfo)} className="text-yellow-400 hover:text-yellow-300 transition-colors" title="Send Warning"><i className="fas fa-bullhorn fa-lg"></i></button>
+                                        <button onClick={() => handleOpenTerminateConfirm(session.userInfo)} className="text-red-500 hover:text-red-400 transition-colors" title="Terminate Exam"><i className="fas fa-ban fa-lg"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    {studentToWarn && <ProctorWarningInputModal isOpen={isWarningModalOpen} onClose={() => setWarningModalOpen(false)} onSend={handleSendWarning} studentName={studentToWarn.name} /> }
+                    {studentToTerminate && <ConfirmModal isOpen={isTerminateConfirmOpen} onClose={() => setTerminateConfirmOpen(false)} onConfirm={handleConfirmTerminate} title={`Terminate Exam for ${studentToTerminate.name}?`} message="This will immediately end the student's exam and disqualify them. This action cannot be undone." /> }
+                </div>
+            );
+        };
+        const RegisteredStudentsComponent = () => {
+            const { registeredStudents } = useQuiz();
+            const [searchTerm, setSearchTerm] = React.useState('');
+            const [sortConfig, setSortConfig] = React.useState({ key: 'name', direction: 'asc' });
+
+            const sortedAndFilteredStudents = React.useMemo(() => {
+                let filtered = [...registeredStudents];
+                if (searchTerm) filtered = filtered.filter(s => s.name.toLowerCase().includes(searchTerm.toLowerCase()) || s.email.toLowerCase().includes(searchTerm.toLowerCase()) || s.phone.includes(searchTerm));
+                if (sortConfig) filtered.sort((a, b) => { const aVal = a[sortConfig.key], bVal = b[sortConfig.key]; if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1; if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1; return 0; });
+                return filtered;
+            }, [registeredStudents, searchTerm, sortConfig]);
+
+            const requestSort = (key) => { let direction = 'asc'; if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') direction = 'desc'; setSortConfig({ key, direction }); };
+            const getSortIcon = (key) => { if (!sortConfig || sortConfig.key !== key) return <i className="fas fa-sort text-gray-400 ml-2"></i>; if (sortConfig.direction === 'asc') return <i className="fas fa-sort-up text-blue-400 ml-2"></i>; return <i className="fas fa-sort-down text-blue-400 ml-2"></i>; };
+            const exportToCSV = () => {
+                const headers = "Name,Email,Mobile Number,Date of Birth,Qualifications\n";
+                const csvContent = sortedAndFilteredStudents.map(s => `"${s.name}","${s.email}","${s.phone}","${s.dob}","${s.qualifications}"`).join("\n");
+                const blob = new Blob([headers + csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement("a");
+                link.setAttribute("href", URL.createObjectURL(blob));
+                link.setAttribute("download", "registered_students.csv");
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            };
+
+            if (registeredStudents.length === 0) return <p className="text-gray-400">No students have registered yet.</p>;
+
+            return (
+                <div>
+                    <div className="flex justify-between items-center mb-4">
+                        <input type="text" placeholder="Search by name, email, or phone..." className="w-full max-w-sm px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-white" onChange={(e) => setSearchTerm(e.target.value)} />
+                        <button onClick={exportToCSV} className="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700"><i className="fas fa-file-csv mr-2"></i>Export to CSV</button>
+                    </div>
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-gray-700">
+                            <thead className="bg-gray-900">
+                                <tr>
+                                    {(['name', 'email', 'phone', 'dob', 'qualifications']).map(key => (
+                                        <th key={key} scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider cursor-pointer" onClick={() => requestSort(key)}>
+                                            <div className="flex items-center">
+                                                {key === 'dob' ? 'Date of Birth' : key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                                                {getSortIcon(key)}
+                                            </div>
+                                        </th>
+                                    ))}
+                                </tr>
+                            </thead>
+                            <tbody className="bg-gray-800 divide-y divide-gray-700">
+                                {sortedAndFilteredStudents.map((student, index) => (
+                                    <tr key={index}>
+                                        <td className="px-6 py-4 whitespace-nowrap">{student.name}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap">{student.email}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap">{student.phone}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap">{student.dob}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap">{student.qualifications}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            );
+        };
+        const StudentReportsComponent = () => {
+            const { studentReports, quizData } = useQuiz();
+            const [searchTerm, setSearchTerm] = React.useState('');
+            const [sortConfig, setSortConfig] = React.useState({ key: 'userInfo', direction: 'asc' });
+            const [detailedReport, setDetailedReport] = React.useState(null);
+
+            const sortedAndFilteredReports = React.useMemo(() => {
+                let filtered = [...studentReports];
+                if (searchTerm) filtered = filtered.filter(report => report.userInfo.name.toLowerCase().includes(searchTerm.toLowerCase()) || report.userInfo.rollNumber.toLowerCase().includes(searchTerm.toLowerCase()));
+                if (sortConfig) filtered.sort((a, b) => { let aVal, bVal; if (sortConfig.key === 'userInfo') { aVal = a.userInfo.name; bVal = b.userInfo.name; } else { aVal = a[sortConfig.key]; bVal = b[sortConfig.key]; } if (typeof aVal === 'string' && typeof bVal === 'string') return sortConfig.direction === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal); if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1; if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1; return 0; });
+                return filtered;
+            }, [studentReports, searchTerm, sortConfig]);
+
+            const requestSort = (key) => { let direction = 'asc'; if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') direction = 'desc'; setSortConfig({ key, direction }); };
+            const getSortIcon = (key) => { if (!sortConfig || sortConfig.key !== key) return <i className="fas fa-sort text-gray-400 ml-2"></i>; if (sortConfig.direction === 'asc') return <i className="fas fa-sort-up text-blue-400 ml-2"></i>; return <i className="fas fa-sort-down text-blue-400 ml-2"></i>; };
+            
+            if (studentReports.length === 0) return <p className="text-gray-400">No students have completed the quiz yet.</p>;
+
+            return (
+                <div>
+                    <div className="mb-4"><input type="text" placeholder="Search by name or roll number..." className="w-full max-w-sm px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-white" onChange={(e) => setSearchTerm(e.target.value)} /></div>
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-gray-700">
+                            <thead className="bg-gray-900">
+                                <tr>
+                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider cursor-pointer" onClick={() => requestSort('userInfo')}> <div className="flex items-center">Name {getSortIcon('userInfo')}</div> </th>
+                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Roll Number</th>
+                                    {(['score', 'attempted', 'unattempted', 'correct', 'incorrect', 'violations', 'status']).map(key => (
+                                        <th key={key} scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider cursor-pointer" onClick={() => requestSort(key)}>
+                                            <div className="flex items-center"> {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())} {getSortIcon(key)} </div>
+                                        </th>
+                                    ))}
+                                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Details</th>
+                                </tr>
+                            </thead>
+                            <tbody className="bg-gray-800 divide-y divide-gray-700">
+                                {sortedAndFilteredReports.map((report, index) => (
+                                    <tr key={index} className={report.status === 'Terminated' ? 'bg-red-900/40' : ''}>
+                                        <td className="px-6 py-4 whitespace-nowrap">{report.userInfo.name}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap">{report.userInfo.rollNumber}</td>
+                                        <td className={`px-6 py-4 whitespace-nowrap font-bold text-lg ${report.score >= 0 ? 'text-green-400' : 'text-red-400'}`}>{report.score}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap">{report.attempted}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap">{report.unattempted}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-green-400">{report.correct}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-red-400">{report.incorrect}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap">{report.violations}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap"><span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${report.status === 'Completed' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`} title={report.terminationReason || ''}>{report.status}</span></td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-center"><button onClick={() => setDetailedReport(report)} disabled={!report.userAnswers} className="text-blue-400 hover:text-blue-300 font-semibold py-1 px-3 rounded-md bg-blue-900/50 hover:bg-blue-900 disabled:bg-gray-700 disabled:text-gray-500 disabled:cursor-not-allowed">View Answers</button></td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                    <ReportDetailsModal isOpen={!!detailedReport} onClose={() => setDetailedReport(null)} report={detailedReport} quizData={quizData} />
+                </div>
+            );
+        };
+        const QuestionManager = ({ subject }) => {
+            const { quizData, updateQuestion, deleteQuestion, showInfo } = useQuiz();
+            const [isModalOpen, setIsModalOpen] = React.useState(false);
+            const [questionToEdit, setQuestionToEdit] = React.useState(null);
+            const [questionIndex, setQuestionIndex] = React.useState(null);
+            const [confirmDelete, setConfirmDelete] = React.useState(null);
+            const questions = quizData[subject]?.questions || [];
+            const handleAdd = () => { setQuestionToEdit(null); setQuestionIndex(null); setIsModalOpen(true); };
+            const handleEdit = (q, index) => { setQuestionToEdit(q); setQuestionIndex(index); setIsModalOpen(true); };
+            const handleDelete = (index) => setConfirmDelete({subject, index});
+            const confirmDeletion = () => { if (confirmDelete) { deleteQuestion(confirmDelete.subject, confirmDelete.index); showInfo(`Question ${confirmDelete.index + 1} deleted.`); setConfirmDelete(null); } };
+            const handleSave = (question) => { updateQuestion(subject, question, questionIndex); showInfo(questionIndex !== null ? 'Question updated successfully!' : 'Question added successfully!'); setIsModalOpen(false); };
+            return (
+                <div>
+                    <div className="flex justify-between items-center mb-4">
+                        <h3 className="text-2xl font-bold">{subject} Questions</h3>
+                        <button onClick={handleAdd} className="bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700"><i className="fas fa-plus mr-2"></i>Add New</button>
+                    </div>
+                    <div className="space-y-4">
+                        {questions.length === 0 ? <p className="text-gray-400">No questions found. Click "Add New" to create one.</p> : questions.map((q, index) => (
+                            <div key={index} className="p-4 border border-gray-700 rounded-lg">
+                                <div className="flex justify-between items-start">
+                                    <div><p className="font-semibold">{index + 1}. {q.q}</p><p className="text-sm text-green-400 mt-1">Correct Answer: {q.o[q.a]}</p></div>
+                                    <div className="flex space-x-2 flex-shrink-0 ml-4"><button onClick={() => handleEdit(q, index)} className="text-blue-500 hover:text-blue-700"><i className="fas fa-edit"></i></button><button onClick={() => handleDelete(index)} className="text-red-500 hover:text-red-700"><i className="fas fa-trash"></i></button></div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    <QuestionModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSave={handleSave} questionToEdit={questionToEdit} subjectName={subject} />
+                    <ConfirmModal isOpen={!!confirmDelete} onClose={() => setConfirmDelete(null)} onConfirm={confirmDeletion} title="Delete Question" message={`Are you sure you want to delete Question ${confirmDelete ? confirmDelete.index + 1 : ''} from ${subject}?`} />
+                </div>
+            );
+        };
+        const AdminPanel = () => {
+            const { quizData, quizTitle, setQuizData, setQuizTitle, addSubject, deleteSubject, showInfo, saveData, registrationDate, setRegistrationDate, examDate, setExamDate, examStartTime, setExamStartTime, examEndTime, setExamEndTime, quizDuration, setQuizDuration } = useQuiz();
+            const [activeTab, setActiveTab] = React.useState('proctoring');
+            const [isSubjectModalOpen, setIsSubjectModalOpen] = React.useState(false);
+            const [isQuizNameModalOpen, setIsQuizNameModalOpen] = React.useState(false);
+            const [subjectToDelete, setSubjectToDelete] = React.useState(null);
+            const [saveBtnText, setSaveBtnText] = React.useState('Save All Changes');
+            const fileInputRef = React.useRef(null);
+            const subjects = Object.keys(quizData);
+            React.useEffect(() => { const validTabs = ['proctoring', 'reports', 'registrations', ...subjects]; if (!validTabs.includes(activeTab)) setActiveTab('proctoring'); }, [quizData, activeTab, subjects]);
+            const handleSaveData = () => { saveData(); setSaveBtnText('Saved!'); setTimeout(() => setSaveBtnText('Save All Changes'), 2000); };
+            const handleAddSubject = (name) => { if (quizData.hasOwnProperty(name)) showInfo(`Subject "${name}" already exists.`); else { addSubject(name); showInfo(`Subject "${name}" added.`); setActiveTab(name); } setIsSubjectModalOpen(false); };
+            const handleConfirmDeleteSubject = () => { if(subjectToDelete) { deleteSubject(subjectToDelete); showInfo(`Subject "${subjectToDelete}" deleted.`); setSubjectToDelete(null); setActiveTab('proctoring'); } };
+            const handleSaveQuizName = (name) => { setQuizTitle(name); showInfo('Quiz name updated successfully!'); setIsQuizNameModalOpen(false); };
+            const handleExport = () => { const dataStr = JSON.stringify(quizData, null, 2); const dataBlob = new Blob([dataStr], {type: "application/json"}); const url = URL.createObjectURL(dataBlob); const link = document.createElement('a'); link.href = url; link.download = 'quiz-data.json'; document.body.appendChild(link); link.click(); document.body.removeChild(link); URL.revokeObjectURL(url); };
+            const handleImport = (event) => { const file = event.target.files?.[0]; if (!file) return; const reader = new FileReader(); reader.onload = (e) => { try { const importedData = JSON.parse(e.target?.result); if (typeof importedData === 'object' && importedData !== null) { setQuizData(importedData); showInfo('Data imported! Click "Save All Changes" to persist them.'); } else { showInfo('Invalid JSON format.'); } } catch (error) { showInfo('Import failed. Not a valid JSON file.'); } }; reader.readAsText(file); event.target.value = ''; };
+
+            return (
+                <section>
+                    <h1 className="text-4xl font-bold text-center text-blue-400 mb-2">Quiz Admin Panel</h1>
+                    <p className="text-center text-gray-400 mb-8">Manage your quiz subjects, questions, and schedule here.</p>
+                    <div className="mb-8 p-6 bg-gray-800 rounded-lg border border-gray-700">
+                        <h2 className="text-xl font-bold mb-4 text-gray-200">Exam Schedule & Duration</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div>
+                                <label htmlFor="registration-date" className="block text-sm font-medium text-gray-300 mb-1">Registration Date</label>
+                                <div className="flex items-center"><input type="date" id="registration-date" value={registrationDate || ''} onChange={(e) => setRegistrationDate(e.target.value || null)} className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-white" /><button onClick={() => setRegistrationDate(null)} className="ml-2 p-2 text-gray-400 hover:text-white" title="Clear date"><i className="fas fa-times"></i></button></div>
+                                <p className="text-xs text-gray-400 mt-1">Registration is only allowed on this specific date. If no date is set, registration will be closed.</p>
+                            </div>
+                            <div>
+                                <label htmlFor="exam-date" className="block text-sm font-medium text-gray-300 mb-1">Exam Date</label>
+                                <div className="flex items-center"><input type="date" id="exam-date" value={examDate || ''} onChange={(e) => setExamDate(e.target.value || null)} className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-white" /><button onClick={() => { setExamDate(null); setExamStartTime(null); setExamEndTime(null); }} className="ml-2 p-2 text-gray-400 hover:text-white" title="Clear date"><i className="fas fa-times"></i></button></div>
+                                <div className="grid grid-cols-2 gap-x-4 mt-2">
+                                    <div><label htmlFor="exam-start-time" className="block text-sm font-medium text-gray-400 mb-1">Start Time</label><input type="time" id="exam-start-time" value={examStartTime || ''} onChange={(e) => setExamStartTime(e.target.value || null)} disabled={!examDate} className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-white disabled:opacity-50" /></div>
+                                    <div><label htmlFor="exam-end-time" className="block text-sm font-medium text-gray-400 mb-1">End Time</label><input type="time" id="exam-end-time" value={examEndTime || ''} onChange={(e) => setExamEndTime(e.target.value || null)} disabled={!examDate} className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-white disabled:opacity-50" /></div>
+                                </div>
+                                <p className="text-xs text-gray-400 mt-1">Set a date and optional time window. If no time is set, the exam is open all day.</p>
+                            </div>
+                            <div>
+                                <label htmlFor="quiz-duration" className="block text-sm font-medium text-gray-300 mb-1">Quiz Duration (minutes)</label>
+                                <input type="number" id="quiz-duration" value={quizDuration > 0 ? quizDuration / 60 : ''} onChange={(e) => setQuizDuration(parseInt(e.target.value || '0', 10) * 60)} min="1" placeholder="e.g., 60" className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-white" />
+                                <p className="text-xs text-gray-400 mt-1">Set the total time allowed for the exam.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="flex flex-wrap justify-center items-center gap-4 mb-8">
+                        <button onClick={() => setIsSubjectModalOpen(true)} className="bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700"><i className="fas fa-book-medical mr-2"></i>Add New Subject</button>
+                        <button onClick={() => setIsQuizNameModalOpen(true)} className="bg-purple-600 text-white py-2 px-4 rounded-md hover:bg-purple-700"><i className="fas fa-pencil-alt mr-2"></i>Edit Quiz Name</button>
+                        <button onClick={() => fileInputRef.current?.click()} className="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700"><i className="fas fa-upload mr-2"></i>Import from JSON</button>
+                        <input type="file" ref={fileInputRef} className="hidden" accept=".json" onChange={handleImport}/>
+                        <button onClick={handleExport} className="bg-gray-600 text-white py-2 px-4 rounded-md hover:bg-gray-700"><i className="fas fa-download mr-2"></i>Export to JSON</button>
+                        <button onClick={handleSaveData} className={`${saveBtnText === 'Saved!' ? 'bg-blue-500' : 'bg-green-600'} text-white py-2 px-4 rounded-md hover:bg-green-700 font-bold`}><i className="fas fa-save mr-2"></i>{saveBtnText}</button>
+                    </div>
+                    <div className="mb-4 border-b border-gray-700">
+                        <ul className="flex flex-wrap -mb-px text-sm font-medium text-center">
+                            <li className="mr-2"><button onClick={() => setActiveTab('proctoring')} className={`inline-flex items-center p-4 border-b-2 rounded-t-lg ${activeTab === 'proctoring' ? 'border-blue-500 text-blue-500' : 'border-transparent'}`}><i className="fas fa-eye mr-2"></i>Proctoring</button></li>
+                            <li className="mr-2"><button onClick={() => setActiveTab('reports')} className={`inline-flex items-center p-4 border-b-2 rounded-t-lg ${activeTab === 'reports' ? 'border-blue-500 text-blue-500' : 'border-transparent'}`}><i className="fas fa-chart-bar mr-2"></i>Exam Reports</button></li>
+                            <li className="mr-2"><button onClick={() => setActiveTab('registrations')} className={`inline-flex items-center p-4 border-b-2 rounded-t-lg ${activeTab === 'registrations' ? 'border-blue-500 text-blue-500' : 'border-transparent'}`}><i className="fas fa-user-plus mr-2"></i>Registrations</button></li>
+                            {subjects.map(subject => (
+                                <li key={subject} className="mr-2"><button onClick={() => setActiveTab(subject)} className={`inline-flex items-center p-4 border-b-2 rounded-t-lg ${activeTab === subject ? 'border-blue-500 text-blue-500' : 'border-transparent'}`}>{subject}<i onClick={(e) => {e.stopPropagation(); setSubjectToDelete(subject);}} className="fas fa-times text-red-500 ml-3 opacity-50 hover:opacity-100 transition-opacity"></i></button></li>
+                            ))}
+                        </ul>
+                    </div>
+                    <div className="p-4 rounded-lg bg-gray-800">
+                        {activeTab === 'proctoring' && <ProctoringComponent />}
+                        {activeTab === 'reports' && <StudentReportsComponent />}
+                        {activeTab === 'registrations' && <RegisteredStudentsComponent />}
+                        {subjects.includes(activeTab) && <QuestionManager subject={activeTab} />}
+                    </div>
+                    <SubjectModal isOpen={isSubjectModalOpen} onClose={() => setIsSubjectModalOpen(false)} onSave={handleAddSubject} />
+                    <QuizNameModal isOpen={isQuizNameModalOpen} onClose={() => setIsQuizNameModalOpen(false)} onSave={handleSaveQuizName} currentName={quizTitle} />
+                    <ConfirmModal isOpen={!!subjectToDelete} onClose={() => setSubjectToDelete(null)} onConfirm={handleConfirmDeleteSubject} title="Delete Subject" message={`Are you sure you want to delete the subject "${subjectToDelete}" and all its questions? This action cannot be undone.`} />
+                </section>
+            );
+        };
+        
+        // --- Main App Component & Context ---
+        const QuizContext = React.createContext(undefined);
+        const useQuiz = () => {
+            const context = React.useContext(QuizContext);
+            if (!context) throw new Error('useQuiz must be used within a QuizProvider');
+            return context;
+        };
+
+        const QuizProvider = ({ children }) => {
+            const [quizData, setQuizData] = React.useState(DEFAULT_QUIZ_DATA);
+            const [quizTitle, setQuizTitle] = React.useState(DEFAULT_QUIZ_TITLE);
+            const [studentReports, setStudentReports] = React.useState([]);
+            const [registeredStudents, setRegisteredStudents] = React.useState([]);
+            const [registrationDate, setRegistrationDate] = React.useState('2025-08-11');
+            const [examDate, setExamDate] = React.useState('2025-08-12');
+            const [examStartTime, setExamStartTime] = React.useState('10:00');
+            const [examEndTime, setExamEndTime] = React.useState('12:00');
+            const [quizDuration, setQuizDuration] = React.useState(3600); // 60 minutes
+            const [infoMessage, setInfoMessage] = React.useState('');
+            const [isInfoModalOpen, setIsInfoModalOpen] = React.useState(false);
+            const [view, setView] = React.useState('registration');
+            const [isAdminLoggedIn, setIsAdminLoggedIn] = React.useState(false);
+
+            React.useEffect(() => {
+                try {
+                    const storedData = localStorage.getItem('rrbQuizData');
+                    const storedTitle = localStorage.getItem('rrbQuizTitle');
+                    const storedReports = localStorage.getItem('rrbQuizReports');
+                    const storedRegisteredStudents = localStorage.getItem('rrbRegisteredStudents');
+                    const storedRegDate = localStorage.getItem('rrbRegistrationDate');
+                    const storedExamDate = localStorage.getItem('rrbExamDate');
+                    const storedExamStartTime = localStorage.getItem('rrbExamStartTime');
+                    const storedExamEndTime = localStorage.getItem('rrbExamEndTime');
+                    const storedDuration = localStorage.getItem('rrbQuizDuration');
+
+                    // Load from local storage only if it exists, otherwise keep the new defaults
+                    setQuizData(storedData ? JSON.parse(storedData) : DEFAULT_QUIZ_DATA);
+                    setQuizTitle(storedTitle || DEFAULT_QUIZ_TITLE);
+                    setStudentReports(storedReports ? JSON.parse(storedReports) : []);
+                    setRegisteredStudents(storedRegisteredStudents ? JSON.parse(storedRegisteredStudents) : []);
+                    setRegistrationDate(storedRegDate || '2025-08-11');
+                    setExamDate(storedExamDate || '2025-08-12');
+                    setExamStartTime(storedExamStartTime || '10:00');
+                    setExamEndTime(storedExamEndTime || '12:00');
+                    setQuizDuration(storedDuration ? JSON.parse(storedDuration) : 3600);
+
+                } catch (e) { console.error("Failed to load data from localStorage", e); }
+            }, []);
+            
+            const loginAdmin = () => { setIsAdminLoggedIn(true); setView('admin'); };
+            const logoutAdmin = () => { setIsAdminLoggedIn(false); setView('student'); };
+            const showInfo = (message) => { setInfoMessage(message); setIsInfoModalOpen(true); };
+
+            const saveData = React.useCallback(() => {
+                try {
+                    localStorage.setItem('rrbQuizData', JSON.stringify(quizData));
+                    localStorage.setItem('rrbQuizTitle', quizTitle);
+                    localStorage.setItem('rrbQuizReports', JSON.stringify(studentReports));
+                    localStorage.setItem('rrbRegisteredStudents', JSON.stringify(registeredStudents));
+                    if (registrationDate) localStorage.setItem('rrbRegistrationDate', registrationDate); else localStorage.removeItem('rrbRegistrationDate');
+                    if (examDate) localStorage.setItem('rrbExamDate', examDate); else localStorage.removeItem('rrbExamDate');
+                    if (examStartTime) localStorage.setItem('rrbExamStartTime', examStartTime); else localStorage.removeItem('rrbExamStartTime');
+                    if (examEndTime) localStorage.setItem('rrbExamEndTime', examEndTime); else localStorage.removeItem('rrbExamEndTime');
+                    localStorage.setItem('rrbQuizDuration', JSON.stringify(quizDuration));
+                } catch (e) { showInfo("Could not save data. Your browser might be in private mode or storage is full."); }
+            }, [quizData, quizTitle, studentReports, registeredStudents, registrationDate, examDate, examStartTime, examEndTime, quizDuration]);
+            
+            const addSubject = (name) => setQuizData(prev => ({ ...prev, [name]: { questions: [] } }));
+            const deleteSubject = (name) => setQuizData(prev => { const newData = { ...prev }; delete newData[name]; return newData; });
+            const updateQuestion = (subject, question, index) => { setQuizData(prev => { const newQuestions = [...prev[subject].questions]; if (index !== null) newQuestions[index] = question; else newQuestions.push(question); return { ...prev, [subject]: { questions: newQuestions } }; }); };
+            const deleteQuestion = (subject, index) => setQuizData(prev => ({ ...prev, [subject]: { questions: prev[subject].questions.filter((_, i) => i !== index) } }));
+            
+            const registerStudent = (student) => {
+                const isDuplicate = registeredStudents.some(s => s.email.toLowerCase() === student.email.toLowerCase());
+                if (isDuplicate) { showInfo("A student with this email is already registered."); return false; }
+                setRegisteredStudents(prev => { const newStudents = [...prev, student]; try { localStorage.setItem('rrbRegisteredStudents', JSON.stringify(newStudents)); } catch (e) { console.error("Failed to save registered students", e); } return newStudents; });
+                showInfo("Registration successful! You may now go to the Student View to log in.");
+                return true;
+            };
+            
+            const saveStudentReport = (report) => {
+                setStudentReports(prev => {
+                    const newReports = [...prev, report];
+                    try { localStorage.setItem('rrbQuizReports', JSON.stringify(newReports)); } catch (e) { console.error("Failed to save student report", e); }
+                    return newReports;
+                });
+            };
+
+            const value = {
+                quizData, quizTitle, studentReports, registeredStudents, registrationDate, examDate, examStartTime, examEndTime, quizDuration, setQuizData, setQuizTitle, addSubject, deleteSubject, updateQuestion, deleteQuestion, saveData, registerStudent, saveStudentReport, showInfo, setRegistrationDate, setExamDate, setExamStartTime, setExamEndTime, setQuizDuration, view, setView, isAdminLoggedIn, loginAdmin, logoutAdmin
+            };
+
+            return (
+                <QuizContext.Provider value={value}>
+                    {children}
+                    <InfoModal isOpen={isInfoModalOpen} onClose={() => setIsInfoModalOpen(false)} message={infoMessage} />
+                </QuizContext.Provider>
+            );
+        };
+
+        const Header = () => {
+            const { quizTitle, view, setView, isAdminLoggedIn, logoutAdmin, loginAdmin } = useQuiz();
+            const [isLoginModalOpen, setIsLoginModalOpen] = React.useState(false);
+
+            const handleSetView = (v) => {
+                if (v === 'admin' && !isAdminLoggedIn) setIsLoginModalOpen(true);
+                else setView(v);
+            };
+
+            const handleLogin = () => { loginAdmin(); setIsLoginModalOpen(false); };
+
+            return (
+                <>
+                    <header className="bg-gray-800 shadow-md sticky top-0 z-40">
+                        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                            <div className="flex items-center justify-between h-16">
+                                <div className="flex items-center"><span className="font-bold text-xl text-blue-400">{quizTitle}</span></div>
+                                <div className="flex items-center space-x-4">
+                                    <button onClick={() => setView('registration')} className={`py-2 px-3 rounded-md text-sm font-medium ${view === 'registration' ? 'bg-blue-900 text-blue-200' : 'text-gray-300 hover:bg-gray-700'}`}>Registration</button>
+                                    <button onClick={() => setView('student')} className={`py-2 px-3 rounded-md text-sm font-medium ${view === 'student' ? 'bg-blue-900 text-blue-200' : 'text-gray-300 hover:bg-gray-700'}`}>Student View</button>
+                                    {isAdminLoggedIn ? (
+                                         <button onClick={logoutAdmin} className="py-2 px-3 rounded-md text-sm font-medium bg-red-800 text-red-200 hover:bg-red-700">Logout Admin</button>
+                                    ) : (
+                                        <button onClick={() => handleSetView('admin')} className={`py-2 px-3 rounded-md text-sm font-medium ${view === 'admin' ? 'bg-blue-900 text-blue-200' : 'text-gray-300 hover:bg-gray-700'}`}>Admin View</button>
+                                    )}
+                                </div>
+                            </div>
+                        </nav>
+                    </header>
+                    <AdminLoginModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} onLogin={handleLogin} />
+                </>
+            );
+        };
+
+        const AppLayout = () => {
+            const { view, isAdminLoggedIn } = useQuiz();
+            return (
+                <>
+                    <Header />
+                    <main className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+                        {view === 'admin' && isAdminLoggedIn && <AdminPanel />}
+                        {view === 'student' && <StudentPanel />}
+                        {view === 'registration' && <RegistrationPanel />}
+                    </main>
+                </>
+            );
+        };
+
+        function App() {
+            return (
+                <QuizProvider>
+                    <AppLayout />
+                </QuizProvider>
+            );
+        }
+        
+        // --- Mount React App ---
+        const rootElement = document.getElementById('root');
+        if (!rootElement) {
+          throw new Error("Could not find root element to mount to");
+        }
+        const root = ReactDOM.createRoot(rootElement);
+        root.render(
+          <React.StrictMode>
+            <App />
+          </React.StrictMode>
+        );
+
+    </script>
+</body>
+</html>
