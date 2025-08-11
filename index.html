@@ -83,6 +83,32 @@
     <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, onSnapshot, collection, addDoc, query, getDocs, deleteDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        
+        // These global variables are provided by the environment.
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-quiz-app';
+        
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Authenticate the user
+        if (typeof __initial_auth_token !== 'undefined') {
+            await signInWithCustomToken(auth, __initial_auth_token);
+        } else {
+            await signInAnonymously(auth);
+        }
+
+        // Make Firebase services available globally for the React components
+        window.firebaseServices = { auth, db, doc, getDoc, setDoc, onSnapshot, collection, addDoc, query, getDocs, deleteDoc, writeBatch, appId };
+    </script>
 </head>
 <body class="bg-gray-900 text-gray-200 transition-colors duration-300">
     <div id="root"></div>
@@ -94,162 +120,19 @@
             "questions": [
               { "q": "What is the SI unit of force?", "o": ["Joule", "Watt", "Newton", "Pascal"], "a": 2 },
               { "q": "Which of Newton's laws is also known as the law of inertia?", "o": ["Newton's First Law", "Newton's Second Law", "Newton's Third Law", "Law of Gravitation"], "a": 0 },
-              { "q": "What is the SI unit of work or energy?", "o": ["Joule", "Watt", "Coulomb", "Pascal"], "a": 0 },
-              { "q": "The rate of change of velocity is called...", "o": ["Speed", "Momentum", "Inertia", "Acceleration"], "a": 3 },
-              { "q": "What is the value of acceleration due to gravity (g) on Earth's surface?", "o": ["9.8 m/s²", "3.7 m/s²", "1.6 m/s²", "24.8 m/s²"], "a": 0 },
-              { "q": "Which of the following is a vector quantity?", "o": ["Mass", "Speed", "Distance", "Velocity"], "a": 3 },
-              { "q": "The law of universal gravitation was formulated by whom?", "o": ["Galileo Galilei", "Isaac Newton", "Albert Einstein", "Johannes Kepler"], "a": 1 },
-              { "q": "What is the SI unit of power?", "o": ["Joule", "Hertz", "Watt", "Newton"], "a": 2 },
-              { "q": "A projectile follows which type of path under gravity?", "o": ["Circular", "Parabolic", "Hyperbolic", "Straight line"], "a": 1 },
-              { "q": "What is momentum a product of?", "o": ["Force and time", "Mass and velocity", "Mass and acceleration", "Force and distance"], "a": 1 },
-              { "q": "For every action, there is an equal and opposite reaction. This is...", "o": ["Newton's First Law", "Newton's Second Law", "Newton's Third Law", "Law of Conservation of Energy"], "a": 2 },
-              { "q": "What is the SI unit of pressure?", "o": ["Newton", "Joule", "Watt", "Pascal"], "a": 3 },
-              { "q": "The escape velocity from the Earth's surface is approximately:", "o": ["7.9 km/s", "9.8 km/s", "11.2 km/s", "15.0 km/s"], "a": 2 },
-              { "q": "What does a spinning top demonstrate?", "o": ["Linear momentum", "Angular momentum", "Kinetic energy", "Potential energy"], "a": 1 },
-              { "q": "Which of these is a scalar quantity?", "o": ["Force", "Velocity", "Acceleration", "Mass"], "a": 3 },
-              { "q": "Which mode of heat transfer does not require a medium?", "o": ["Conduction", "Convection", "Radiation", "Advection"], "a": 2 },
-              { "q": "What temperature is known as absolute zero?", "o": ["0 K", "0 °C", "0 °F", "100 K"], "a": 0 },
-              { "q": "The first law of thermodynamics is a statement of the conservation of...", "o": ["Mass", "Energy", "Momentum", "Charge"], "a": 1 },
-              { "q": "What is a measure of the disorder or randomness of a system?", "o": ["Enthalpy", "Entropy", "Temperature", "Pressure"], "a": 1 },
-              { "q": "Which device is used to measure temperature?", "o": ["Barometer", "Ammeter", "Manometer", "Thermometer"], "a": 3 },
-              { "q": "Sound waves are an example of what type of wave?", "o": ["Longitudinal waves", "Transverse waves", "Electromagnetic waves", "Surface waves"], "a": 0 },
-              { "q": "What is the SI unit of frequency?", "o": ["Decibel", "Meter", "Second", "Hertz"], "a": 3 },
-              { "q": "Light waves are an example of what type of wave?", "o": ["Longitudinal waves", "Transverse waves", "Mechanical waves", "Matter waves"], "a": 1 },
-              { "q": "The bending of light as it passes from one medium to another is called:", "o": ["Reflection", "Refraction", "Diffraction", "Dispersion"], "a": 1 },
-              { "q": "Which type of mirror is used as a rear-view mirror in vehicles?", "o": ["Concave mirror", "Plane mirror", "Convex mirror", "Cylindrical mirror"], "a": 2 },
-              { "q": "The splitting of white light into its constituent colors is known as:", "o": ["Interference", "Dispersion", "Polarization", "Diffraction"], "a": 1 },
-              { "q": "A lens that is thicker at the center than at the edges is a:", "o": ["Concave lens", "Convex lens", "Plano-concave lens", "Meniscus lens"], "a": 1 },
-              { "q": "The speed of sound is fastest in which medium?", "o": ["Vacuum", "Air", "Water", "Steel"], "a": 3 },
-              { "q": "What is the SI unit of electric charge?", "o": ["Ampere", "Volt", "Ohm", "Coulomb"], "a": 3 },
-              { "q": "Ohm's law relates voltage, current, and what other quantity?", "o": ["Power", "Charge", "Resistance", "Capacitance"], "a": 2 },
-              { "q": "Which of these is the best conductor of electricity?", "o": ["Silver", "Glass", "Rubber", "Wood"], "a": 0 },
-              { "q": "What is the SI unit of electric current?", "o": ["Volt", "Ampere", "Ohm", "Watt"], "a": 1 },
-              { "q": "Like electric charges ______, and opposite charges ______.", "o": ["attract, repel", "repel, attract", "attract, attract", "repel, repel"], "a": 1 },
-              { "q": "A device used to measure electric current is called a(n):", "o": ["Ammeter", "Voltmeter", "Ohmmeter", "Galvanometer"], "a": 0 },
-              { "q": "Magnetic field lines originate from which pole of a magnet?", "o": ["North pole", "South pole", "Both poles", "Neither pole"], "a": 0 },
-              { "q": "What is the SI unit for magnetic field strength?", "o": ["Weber", "Henry", "Tesla", "Gauss"], "a": 2 },
-              { "q": "An electric motor converts ______ energy into ______ energy.", "o": ["mechanical, electrical", "electrical, mechanical", "chemical, electrical", "electrical, heat"], "a": 1 },
-              { "q": "Which of the following is a good electrical insulator?", "o": ["Copper", "Aluminum", "Gold", "Plastic"], "a": 3 },
-              { "q": "Who is credited with the theory of general relativity?", "o": ["Isaac Newton", "Niels Bohr", "Albert Einstein", "Max Planck"], "a": 2 },
-              { "q": "The equation E=mc² relates which two concepts?", "o": ["Energy and charge", "Mass and energy", "Momentum and speed", "Force and mass"], "a": 1 },
-              { "q": "The particle of light is known as a:", "o": ["Photon", "Electron", "Proton", "Neutron"], "a": 0 },
-              { "q": "What is the charge of an electron?", "o": ["Positive", "Negative", "Neutral", "Variable"], "a": 1 },
-              { "q": "The process of splitting a heavy atomic nucleus is called:", "o": ["Nuclear fission", "Nuclear fusion", "Radioactive decay", "Chain reaction"], "a": 0 },
-              { "q": "Which particle is found in the nucleus of an atom along with protons?", "o": ["Electron", "Photon", "Neutron", "Positron"], "a": 2 },
-              { "q": "The process that powers the Sun is:", "o": ["Nuclear fission", "Nuclear fusion", "Chemical combustion", "Gravitational collapse"], "a": 1 },
-              { "q": "Which of these is NOT a fundamental force of nature?", "o": ["Gravity", "Electromagnetism", "Friction", "Strong Nuclear Force"], "a": 2 },
-              { "q": "Who is considered the father of quantum theory?", "o": ["Albert Einstein", "Erwin Schrödinger", "Werner Heisenberg", "Max Planck"], "a": 3 },
-              { "q": "The uncertainty principle was formulated by:", "o": ["Niels Bohr", "Werner Heisenberg", "Albert Einstein", "Louis de Broglie"], "a": 1 },
-              { "q": "What color of light has the longest wavelength?", "o": ["Blue", "Green", "Yellow", "Red"], "a": 3 },
-              { "q": "An object's resistance to a change in its state of motion is called:", "o": ["Momentum", "Inertia", "Force", "Weight"], "a": 1 }
+              { "q": "What is the SI unit of work or energy?", "o": ["Joule", "Watt", "Coulomb", "Pascal"], "a": 0 }
             ]
           },
           "Chemistry": {
             "questions": [
               { "q": "What is the chemical symbol for gold?", "o": ["Ag", "Au", "Ge", "Go"], "a": 1 },
-              { "q": "What is the pH of pure water?", "o": ["0", "14", "1", "7"], "a": 3 },
-              { "q": "Which gas is most abundant in the Earth's atmosphere?", "o": ["Oxygen", "Hydrogen", "Nitrogen", "Carbon Dioxide"], "a": 2 },
-              { "q": "What is the chemical formula for table salt?", "o": ["H₂O", "CO₂", "NaCl", "C₆H₁₂O₆"], "a": 2 },
-              { "q": "Which of the following is a noble gas?", "o": ["Oxygen", "Nitrogen", "Helium", "Hydrogen"], "a": 2 },
-              { "q": "The atomic number of an element is the number of ______ in its nucleus.", "o": ["Neutrons", "Electrons", "Protons", "Molecules"], "a": 2 },
-              { "q": "What type of bond involves the sharing of electron pairs between atoms?", "o": ["Ionic bond", "Covalent bond", "Metallic bond", "Hydrogen bond"], "a": 1 },
-              { "q": "Which element is the lightest element in the periodic table?", "o": ["Helium", "Lithium", "Oxygen", "Hydrogen"], "a": 3 },
-              { "q": "What is the common name for acetic acid?", "o": ["Vinegar", "Baking soda", "Aspirin", "Alcohol"], "a": 0 },
-              { "q": "Bronze is an alloy of copper and what other metal?", "o": ["Zinc", "Aluminum", "Tin", "Nickel"], "a": 2 },
-              { "q": "What charge does a proton have?", "o": ["Positive", "Negative", "Neutral", "No charge"], "a": 0 },
-              { "q": "What does a catalyst do in a chemical reaction?", "o": ["Stops the reaction", "Is consumed in the reaction", "Speeds up the reaction", "Slows down the reaction"], "a": 2 },
-              { "q": "Which of these is a halogen?", "o": ["Sodium", "Iron", "Fluorine", "Helium"], "a": 2 },
-              { "q": "The process of a solid turning directly into a gas is called:", "o": ["Evaporation", "Condensation", "Melting", "Sublimation"], "a": 3 },
-              { "q": "What is the main component of natural gas?", "o": ["Ethane", "Propane", "Butane", "Methane"], "a": 3 },
-              { "q": "What is the chemical formula for water?", "o": ["HO₂", "H₂O", "CO₂", "O₂H"], "a": 1 },
-              { "q": "Substances with a pH less than 7 are considered:", "o": ["Acids", "Bases", "Neutral", "Salts"], "a": 0 },
-              { "q": "What is the chemical symbol for silver?", "o": ["Si", "Au", "Ag", "Sr"], "a": 2 },
-              { "q": "The columns in the periodic table are called:", "o": ["Periods", "Series", "Groups", "Rows"], "a": 2 },
-              { "q": "Isotopes are atoms of the same element with a different number of:", "o": ["Protons", "Electrons", "Neutrons", "Ions"], "a": 2 },
-              { "q": "Which type of radiation is the most penetrating?", "o": ["Alpha", "Beta", "Gamma", "Delta"], "a": 2 },
-              { "q": "What is the process of coating iron with zinc to prevent rust?", "o": ["Electroplating", "Galvanization", "Anodizing", "Smelting"], "a": 1 },
-              { "q": "Which of these is not a state of matter?", "o": ["Solid", "Liquid", "Gas", "Energy"], "a": 3 },
-              { "q": "The study of carbon-containing compounds is called:", "o": ["Inorganic Chemistry", "Physical Chemistry", "Organic Chemistry", "Biochemistry"], "a": 2 },
-              { "q": "What is the chemical symbol for potassium?", "o": ["P", "Po", "K", "Pt"], "a": 2 },
-              { "q": "What is the mass number of an atom?", "o": ["Number of protons", "Number of neutrons", "Protons + Neutrons", "Protons + Electrons"], "a": 2 },
-              { "q": "What type of reaction absorbs heat from the surroundings?", "o": ["Exothermic", "Endothermic", "Combustion", "Neutralization"], "a": 1 },
-              { "q": "Diamond is an allotrope of which element?", "o": ["Silicon", "Carbon", "Germanium", "Sulfur"], "a": 1 },
-              { "q": "Which acid is found in lemons and limes?", "o": ["Sulfuric acid", "Acetic acid", "Citric acid", "Hydrochloric acid"], "a": 2 },
-              { "q": "What are the products of a neutralization reaction?", "o": ["Acid and Base", "Salt and Water", "Acid and Water", "Base and Salt"], "a": 1 },
-              { "q": "What is the chemical symbol for sodium?", "o": ["S", "So", "Na", "Nd"], "a": 2 },
-              { "q": "In which type of bond are electrons transferred from one atom to another?", "o": ["Covalent", "Ionic", "Metallic", "Hydrogen"], "a": 1 },
-              { "q": "The rows in the periodic table are called:", "o": ["Groups", "Families", "Series", "Periods"], "a": 3 },
-              { "q": "What does Avogadro's number represent?", "o": ["Number of atoms in a gram", "Number of particles in a mole", "Number of electrons in a shell", "Number of isotopes"], "a": 1 },
-              { "q": "What is the chemical symbol for iron?", "o": ["Ir", "I", "Fe", "In"], "a": 2 },
-              { "q": "Which element is essential for combustion?", "o": ["Nitrogen", "Oxygen", "Hydrogen", "Carbon"], "a": 1 },
-              { "q": "Ozone is an allotrope of which element?", "o": ["Hydrogen", "Nitrogen", "Oxygen", "Fluorine"], "a": 2 },
-              { "q": "Which law states that pressure is inversely proportional to volume?", "o": ["Charles's Law", "Boyle's Law", "Gay-Lussac's Law", "Avogadro's Law"], "a": 1 },
-              { "q": "What is the simplest form of a hydrocarbon?", "o": ["Ethane", "Methane", "Propane", "Butane"], "a": 1 },
-              { "q": "What is the process of separating crude oil into its components called?", "o": ["Cracking", "Fractional Distillation", "Polymerization", "Fermentation"], "a": 1 },
-              { "q": "Which polymer is commonly known as PVC?", "o": ["Polyethylene", "Polypropylene", "Polystyrene", "Polyvinyl chloride"], "a": 3 },
-              { "q": "What is the chemical symbol for lead?", "o": ["Ld", "Pb", "Le", "Pd"], "a": 1 },
-              { "q": "A solution that has a high concentration of H+ ions is:", "o": ["Strongly basic", "Weakly basic", "Strongly acidic", "Neutral"], "a": 2 },
-              { "q": "What is formed when an acid reacts with a metal?", "o": ["Salt and water", "Salt and hydrogen gas", "Base and water", "Base and hydrogen gas"], "a": 1 },
-              { "q": "What gives fizzy drinks their bubbles?", "o": ["Nitrogen gas", "Oxygen gas", "Carbon dioxide gas", "Hydrogen gas"], "a": 2 },
-              { "q": "Which element is a liquid at room temperature?", "o": ["Bromine", "Chlorine", "Iodine", "Sodium"], "a": 0 },
-              { "q": "What is the common name for sodium bicarbonate?", "o": ["Washing soda", "Baking soda", "Caustic soda", "Vinegar"], "a": 1 },
-              { "q": "Which of these is not a fossil fuel?", "o": ["Coal", "Petroleum", "Natural Gas", "Wood"], "a": 3 },
-              { "q": "The loss of electrons in a reaction is called:", "o": ["Reduction", "Oxidation", "Neutralization", "Sublimation"], "a": 1 },
-              { "q": "Which glass is heat-resistant?", "o": ["Flint glass", "Soda-lime glass", "Borosilicate glass", "Crown glass"], "a": 2 }
+              { "q": "What is the pH of pure water?", "o": ["0", "14", "1", "7"], "a": 3 }
             ]
           },
           "Biology": {
             "questions": [
               { "q": "What is known as the powerhouse of the cell?", "o": ["Nucleus", "Ribosome", "Mitochondrion", "Cell Membrane"], "a": 2 },
-              { "q": "Which process do plants use to make their own food?", "o": ["Respiration", "Photosynthesis", "Transpiration", "Germination"], "a": 1 },
-              { "q": "How many bones are in the adult human body?", "o": ["206", "212", "198", "300"], "a": 0 },
-              { "q": "What is the largest organ in the human body?", "o": ["Liver", "Brain", "Heart", "Skin"], "a": 3 },
-              { "q": "DNA is short for what molecule?", "o": ["Deoxyribonucleic acid", "Diatomic acid", "Ribonucleic acid", "Duonucleic acid"], "a": 0 },
-              { "q": "Which part of the blood is responsible for carrying oxygen?", "o": ["White blood cells", "Platelets", "Plasma", "Red blood cells"], "a": 3 },
-              { "q": "What is the control center of the cell?", "o": ["Mitochondrion", "Vacuole", "Nucleus", "Cytoplasm"], "a": 2 },
-              { "q": "What is the main function of the roots of a plant?", "o": ["To produce flowers", "To perform photosynthesis", "To absorb water and nutrients", "To store food"], "a": 2 },
-              { "q": "Which human system is responsible for fighting infections?", "o": ["Digestive system", "Nervous system", "Immune system", "Respiratory system"], "a": 2 },
-              { "q": "What is the basic unit of life?", "o": ["Atom", "Molecule", "Tissue", "Cell"], "a": 3 },
-              { "q": "What type of animal is a frog?", "o": ["Reptile", "Amphibian", "Mammal", "Fish"], "a": 1 },
-              { "q": "The process of cell division that results in two identical daughter cells is called:", "o": ["Meiosis", "Mitosis", "Fusion", "Budding"], "a": 1 },
-              { "q": "Which part of the plant contains the seeds?", "o": ["Leaf", "Stem", "Root", "Fruit"], "a": 3 },
-              { "q": "What is the study of fossils called?", "o": ["Archaeology", "Paleontology", "Geology", "Anthropology"], "a": 1 },
-              { "q": "Which organ in the human body produces insulin?", "o": ["Liver", "Stomach", "Pancreas", "Kidney"], "a": 2 },
-              { "q": "The green pigment in plants is called:", "o": ["Chlorophyll", "Xanthophyll", "Carotene", "Anthocyanin"], "a": 0 },
-              { "q": "Which of these is not a mammal?", "o": ["Whale", "Bat", "Dolphin", "Shark"], "a": 3 },
-              { "q": "What is the scientific study of insects called?", "o": ["Ornithology", "Entomology", "Herpetology", "Ichthyology"], "a": 1 },
-              { "q": "What is the main artery that carries blood from the heart?", "o": ["Pulmonary artery", "Femoral artery", "Aorta", "Carotid artery"], "a": 2 },
-              { "q": "Which kingdom does a mushroom belong to?", "o": ["Plantae", "Animalia", "Fungi", "Protista"], "a": 2 },
-              { "q": "What are the tiny air sacs in the lungs called?", "o": ["Bronchi", "Trachea", "Alveoli", "Capillaries"], "a": 2 },
-              { "q": "Which vitamin is produced when the skin is exposed to sunlight?", "o": ["Vitamin A", "Vitamin C", "Vitamin D", "Vitamin K"], "a": 2 },
-              { "q": "What is the hardest substance in the human body?", "o": ["Bone", "Dentin", "Enamel", "Keratin"], "a": 2 },
-              { "q": "What is the process by which organisms better adapted to their environment tend to survive?", "o": ["Genetic drift", "Mutation", "Natural selection", "Artificial selection"], "a": 2 },
-              { "q": "Which part of the brain is responsible for balance and coordination?", "o": ["Cerebrum", "Cerebellum", "Medulla oblongata", "Thalamus"], "a": 1 },
-              { "q": "What is the primary function of the kidneys?", "o": ["To digest food", "To pump blood", "To filter waste from blood", "To produce hormones"], "a": 2 },
-              { "q": "The passing of traits from parents to offspring is called:", "o": ["Metamorphosis", "Evolution", "Heredity", "Adaptation"], "a": 2 },
-              { "q": "How many chambers does the human heart have?", "o": ["One", "Two", "Three", "Four"], "a": 3 },
-              { "q": "What is the name of the tube that connects the throat to the stomach?", "o": ["Trachea", "Esophagus", "Larynx", "Aorta"], "a": 1 },
-              { "q": "Which gas do plants release during photosynthesis?", "o": ["Carbon Dioxide", "Nitrogen", "Oxygen", "Methane"], "a": 2 },
-              { "q": "Who is considered the father of genetics?", "o": ["Charles Darwin", "Gregor Mendel", "Louis Pasteur", "Robert Hooke"], "a": 1 },
-              { "q": "What are the building blocks of proteins?", "o": ["Fatty acids", "Nucleotides", "Amino acids", "Monosaccharides"], "a": 2 },
-              { "q": "Which part of the nervous system consists of the brain and spinal cord?", "o": ["Peripheral Nervous System", "Somatic Nervous System", "Autonomic Nervous System", "Central Nervous System"], "a": 3 },
-              { "q": "A group of similar cells performing a specific function is called a:", "o": ["Organ", "Tissue", "System", "Organism"], "a": 1 },
-              { "q": "What is the liquid component of blood called?", "o": ["Serum", "Lymph", "Plasma", "Platelets"], "a": 2 },
-              { "q": "Which of these is a producer in a food chain?", "o": ["Lion", "Deer", "Grass", "Mushroom"], "a": 2 },
-              { "q": "Which part of a flower develops into a fruit?", "o": ["Petal", "Sepal", "Ovary", "Stamen"], "a": 2 },
-              { "q": "What is the largest bone in the human body?", "o": ["Tibia", "Humerus", "Femur", "Fibula"], "a": 2 },
-              { "q": "Deficiency of which vitamin causes scurvy?", "o": ["Vitamin A", "Vitamin B", "Vitamin C", "Vitamin D"], "a": 2 },
-              { "q": "What structure connects a muscle to a bone?", "o": ["Ligament", "Tendon", "Cartilage", "Joint"], "a": 1 },
-              { "q": "Which organ system is responsible for breaking down food?", "o": ["Respiratory System", "Circulatory System", "Digestive System", "Nervous System"], "a": 2 },
-              { "q": "What is the process of water evaporating from the leaves of plants?", "o": ["Condensation", "Precipitation", "Respiration", "Transpiration"], "a": 3 },
-              { "q": "In which part of the body is the smallest bone located?", "o": ["Nose", "Ear", "Finger", "Toe"], "a": 1 },
-              { "q": "What is the main function of white blood cells?", "o": ["Carry oxygen", "Help in blood clotting", "Fight infection", "Carry nutrients"], "a": 2 },
-              { "q": "Which of these animals is warm-blooded?", "o": ["Snake", "Lizard", "Pigeon", "Crocodile"], "a": 2 },
-              { "q": "The double helix structure is associated with which molecule?", "o": ["RNA", "Protein", "Carbohydrate", "DNA"], "a": 3 },
-              { "q": "What is the tough, flexible tissue found at the ends of bones?", "o": ["Tendon", "Ligament", "Cartilage", "Marrow"], "a": 2 },
-              { "q": "An organism that eats both plants and animals is called a(n):", "o": ["Carnivore", "Herbivore", "Omnivore", "Producer"], "a": 2 },
-              { "q": "Where does most of the absorption of nutrients occur in the human body?", "o": ["Stomach", "Large intestine", "Small intestine", "Esophagus"], "a": 2 },
-              { "q": "What is the human body's normal temperature in Celsius?", "o": ["35°C", "37°C", "39°C", "41°C"], "a": 1 }
+              { "q": "Which process do plants use to make their own food?", "o": ["Respiration", "Photosynthesis", "Transpiration", "Germination"], "a": 1 }
             ]
           }
         };
@@ -343,7 +226,6 @@
 
             const handleSubmit = (e) => {
                 e.preventDefault();
-                // In a real application, this would be a secure API call.
                 if (id === '92345055' && password === '92345055') {
                     setError('');
                     onLogin();
@@ -812,7 +694,9 @@
             );
         };
         const StudentPanel = () => {
-            const { quizData, quizTitle, saveStudentReport, showInfo, quizDuration, setView } = useQuiz();
+            const { quizData, saveStudentReport, showInfo, quizDuration, setView } = useQuiz();
+            const { db, doc, setDoc, onSnapshot, appId } = window.firebaseServices;
+
             const [step, setStep] = React.useState('login');
             const [userInfo, setUserInfo] = React.useState(null);
             const [userAnswers, setUserAnswers] = React.useState({});
@@ -847,29 +731,7 @@
                 window.addEventListener('beforeunload', handleBeforeUnload);
                 return () => window.removeEventListener('beforeunload', handleBeforeUnload);
             }, [timerActive]);
-
-            const cleanupProctoringData = (email) => {
-                if (!email) return;
-                try {
-                    const sessionsData = localStorage.getItem('proctoring_sessions');
-                    if (sessionsData) {
-                        const sessions = JSON.parse(sessionsData);
-                        if (sessions[email]) {
-                            delete sessions[email];
-                            localStorage.setItem('proctoring_sessions', JSON.stringify(sessions));
-                        }
-                    }
-                    const actionsData = localStorage.getItem('proctoring_actions');
-                    if (actionsData) {
-                        const actions = JSON.parse(actionsData);
-                        if (actions[email]) {
-                            delete actions[email];
-                            localStorage.setItem('proctoring_actions', JSON.stringify(actions));
-                        }
-                    }
-                } catch (error) { console.error("Error cleaning up proctoring data:", error); }
-            };
-
+            
             const totalQuestions = React.useMemo(() => Object.values(quizData).reduce((sum, subject) => sum + (subject.questions ? subject.questions.length : 0), 0), [quizData]);
 
             React.useEffect(() => {
@@ -904,29 +766,26 @@
             
             const exitQuiz = React.useCallback(() => {
                 stopAllIntervals();
-                cleanupProctoringData(userInfo?.email || null);
                 if (webcamStreamRef.current) webcamStreamRef.current.getTracks().forEach(track => track.stop());
                 webcamStreamRef.current = null;
                 setView('registration');
-            }, [stopAllIntervals, userInfo, setView]);
+            }, [stopAllIntervals, setView]);
 
             const disqualifyUser = React.useCallback((reason) => {
                 stopAllIntervals();
                 calculateAndSaveReport('Terminated', reason);
                 setDisqualificationReason(reason);
-                cleanupProctoringData(userInfo?.email || null);
                 if (webcamStreamRef.current) webcamStreamRef.current.getTracks().forEach(track => track.stop());
                 if (document.fullscreenElement) document.exitFullscreen().catch(err => console.error("Could not exit fullscreen", err));
                 setStep('disqualified');
-            }, [stopAllIntervals, calculateAndSaveReport, userInfo]);
+            }, [stopAllIntervals, calculateAndSaveReport]);
 
             const endQuiz = React.useCallback(() => {
                 stopAllIntervals();
                 calculateAndSaveReport('Completed', null);
-                cleanupProctoringData(userInfo?.email || null);
                 if (webcamStreamRef.current) webcamStreamRef.current.getTracks().forEach(track => track.stop());
                 setStep('result');
-            }, [stopAllIntervals, calculateAndSaveReport, userInfo]);
+            }, [stopAllIntervals, calculateAndSaveReport]);
             
             const endQuizRef = React.useRef(endQuiz);
             endQuizRef.current = endQuiz;
@@ -939,39 +798,45 @@
                 }
             }, [step]);
             
+            // Effect for Real-time Proctoring
             React.useEffect(() => {
-                if (timerActive && userInfo) {
-                    const canvas = document.createElement('canvas');
-                    const context = canvas.getContext('2d');
-                    canvas.width = 320;
-                    canvas.height = 240;
+                if (!timerActive || !userInfo) return;
 
-                    proctoringIntervalRef.current = window.setInterval(() => {
-                        if (webcamFeedRef.current && webcamFeedRef.current.readyState >= 2 && context) {
-                            context.drawImage(webcamFeedRef.current, 0, 0, canvas.width, canvas.height);
-                            const snapshot = canvas.toDataURL('image/jpeg', 0.5);
-                            try {
-                                const sessionsData = localStorage.getItem('proctoring_sessions') || '{}';
-                                const sessions = JSON.parse(sessionsData);
-                                sessions[userInfo.email] = { userInfo, violationCount, webcamSnapshot: snapshot, lastSeen: Date.now() };
-                                localStorage.setItem('proctoring_sessions', JSON.stringify(sessions));
-                            } catch (e) { console.error("Could not update proctoring session", e); }
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                canvas.width = 320;
+                canvas.height = 240;
+                
+                // Update proctoring session data periodically
+                proctoringIntervalRef.current = setInterval(() => {
+                    if (webcamFeedRef.current && webcamFeedRef.current.readyState >= 2 && context) {
+                        context.drawImage(webcamFeedRef.current, 0, 0, canvas.width, canvas.height);
+                        const snapshot = canvas.toDataURL('image/jpeg', 0.5);
+                        const sessionRef = doc(db, `/artifacts/${appId}/public/data/proctoringSessions`, userInfo.email);
+                        setDoc(sessionRef, { userInfo, violationCount: violationCountRef.current, webcamSnapshot: snapshot, lastSeen: Date.now() });
+                    }
+                }, 5000);
+
+                // Listen for actions from the admin
+                const actionRef = doc(db, `/artifacts/${appId}/public/data/proctoringActions`, userInfo.email);
+                const unsubscribe = onSnapshot(actionRef, (docSnap) => {
+                    if (docSnap.exists()) {
+                        const actionData = docSnap.data();
+                        if (actionData.action === 'terminate') {
+                            disqualifyUserRef.current('Terminated by Administrator.');
+                        } else if (actionData.action === 'warn' && actionData.message) {
+                            showInfo(`Admin Warning: ${actionData.message}`);
                         }
-                        try {
-                            const actionsData = localStorage.getItem('proctoring_actions') || '{}';
-                            const actions = JSON.parse(actionsData);
-                            if (actions[userInfo.email]) {
-                                const action = actions[userInfo.email];
-                                delete actions[userInfo.email];
-                                localStorage.setItem('proctoring_actions', JSON.stringify(actions));
-                                if (action.action === 'terminate') disqualifyUserRef.current('Terminated by Administrator.');
-                                else if (action.action === 'warn' && action.message) showInfo(`Admin Warning: ${action.message}`);
-                            }
-                        } catch(e) { console.error("Could not check for proctoring actions", e); }
-                    }, 5000);
-                }
-                return () => { if (proctoringIntervalRef.current) clearInterval(proctoringIntervalRef.current); };
-            }, [timerActive, userInfo, violationCount, showInfo]);
+                        // Delete the action doc so it doesn't fire again
+                        window.firebaseServices.deleteDoc(actionRef);
+                    }
+                });
+
+                return () => {
+                    if (proctoringIntervalRef.current) clearInterval(proctoringIntervalRef.current);
+                    unsubscribe();
+                };
+            }, [timerActive, userInfo, db, doc, setDoc, onSnapshot, appId, showInfo]);
             
             React.useEffect(() => {
                 if (step === 'answer-review') {
@@ -1275,6 +1140,7 @@
         
         // --- Admin Panel ---
         const ProctoringComponent = () => {
+            const { db, collection, onSnapshot, doc, setDoc, deleteDoc, appId } = window.firebaseServices;
             const [activeSessions, setActiveSessions] = React.useState([]);
             const [isWarningModalOpen, setWarningModalOpen] = React.useState(false);
             const [studentToWarn, setStudentToWarn] = React.useState(null);
@@ -1282,27 +1148,24 @@
             const [studentToTerminate, setStudentToTerminate] = React.useState(null);
 
             React.useEffect(() => {
-                const interval = setInterval(() => {
-                    try {
-                        const sessionsData = localStorage.getItem('proctoring_sessions');
-                        if (sessionsData) {
-                            const sessions = JSON.parse(sessionsData);
-                            const now = Date.now();
-                            const currentSessions = Object.values(sessions).filter(session => now - session.lastSeen < 10000);
-                            setActiveSessions(currentSessions);
-                        } else { setActiveSessions([]); }
-                    } catch (error) { setActiveSessions([]); }
-                }, 3000);
-                return () => clearInterval(interval);
-            }, []);
+                const sessionsRef = collection(db, `/artifacts/${appId}/public/data/proctoringSessions`);
+                const unsubscribe = onSnapshot(sessionsRef, (querySnapshot) => {
+                    const now = Date.now();
+                    const currentSessions = [];
+                    querySnapshot.forEach((doc) => {
+                        const session = doc.data();
+                        if (now - session.lastSeen < 15000) { // 15 second timeout
+                            currentSessions.push(session);
+                        }
+                    });
+                    setActiveSessions(currentSessions);
+                });
+                return () => unsubscribe();
+            }, [db, collection, onSnapshot, appId]);
             
-            const sendProctorAction = (email, action) => {
-                try {
-                    const actionsData = localStorage.getItem('proctoring_actions') || '{}';
-                    const actions = JSON.parse(actionsData);
-                    actions[email] = action;
-                    localStorage.setItem('proctoring_actions', JSON.stringify(actions));
-                } catch (error) { console.error("Error sending proctor action:", error); }
+            const sendProctorAction = async (email, action) => {
+                const actionRef = doc(db, `/artifacts/${appId}/public/data/proctoringActions`, email);
+                await setDoc(actionRef, action);
             };
             
             const handleOpenWarningModal = (userInfo) => { setStudentToWarn(userInfo); setWarningModalOpen(true); };
@@ -1577,88 +1440,139 @@
         };
 
         const QuizProvider = ({ children }) => {
-            const [quizData, setQuizData] = React.useState(DEFAULT_QUIZ_DATA);
-            const [quizTitle, setQuizTitle] = React.useState(DEFAULT_QUIZ_TITLE);
+            const { db, doc, getDoc, setDoc, onSnapshot, collection, addDoc, query, getDocs, deleteDoc, writeBatch, appId } = window.firebaseServices;
+
+            // State holds the application's data. It's now loaded from Firestore.
+            const [quizData, setQuizData] = React.useState({});
+            const [quizTitle, setQuizTitle] = React.useState('Loading...');
             const [studentReports, setStudentReports] = React.useState([]);
             const [registeredStudents, setRegisteredStudents] = React.useState([]);
-            const [registrationDate, setRegistrationDate] = React.useState('2025-08-11');
-            const [examDate, setExamDate] = React.useState('2025-08-12');
-            const [examStartTime, setExamStartTime] = React.useState('10:00');
-            const [examEndTime, setExamEndTime] = React.useState('12:00');
-            const [quizDuration, setQuizDuration] = React.useState(3600); // 60 minutes
+            const [registrationDate, setRegistrationDate] = React.useState(null);
+            const [examDate, setExamDate] = React.useState(null);
+            const [examStartTime, setExamStartTime] = React.useState(null);
+            const [examEndTime, setExamEndTime] = React.useState(null);
+            const [quizDuration, setQuizDuration] = React.useState(3600);
             const [infoMessage, setInfoMessage] = React.useState('');
             const [isInfoModalOpen, setIsInfoModalOpen] = React.useState(false);
             const [view, setView] = React.useState('registration');
             const [isAdminLoggedIn, setIsAdminLoggedIn] = React.useState(false);
+            const [isLoading, setIsLoading] = React.useState(true);
 
+            // This useEffect hook runs once to fetch all initial data from Firestore.
             React.useEffect(() => {
-                try {
-                    const storedData = localStorage.getItem('rrbQuizData');
-                    const storedTitle = localStorage.getItem('rrbQuizTitle');
-                    const storedReports = localStorage.getItem('rrbQuizReports');
-                    const storedRegisteredStudents = localStorage.getItem('rrbRegisteredStudents');
-                    const storedRegDate = localStorage.getItem('rrbRegistrationDate');
-                    const storedExamDate = localStorage.getItem('rrbExamDate');
-                    const storedExamStartTime = localStorage.getItem('rrbExamStartTime');
-                    const storedExamEndTime = localStorage.getItem('rrbExamEndTime');
-                    const storedDuration = localStorage.getItem('rrbQuizDuration');
+                // Setup real-time listeners for all our data collections
+                const configRef = doc(db, `/artifacts/${appId}/public/data/quizConfig/main`);
+                const unsubscribeConfig = onSnapshot(configRef, (docSnap) => {
+                    if (docSnap.exists()) {
+                        const config = docSnap.data();
+                        setQuizTitle(config.title || DEFAULT_QUIZ_TITLE);
+                        setRegistrationDate(config.registrationDate || '2025-08-11');
+                        setExamDate(config.examDate || '2025-08-12');
+                        setExamStartTime(config.examStartTime || '10:00');
+                        setExamEndTime(config.examEndTime || '12:00');
+                        setQuizDuration(config.duration || 3600);
+                        setQuizData(config.quizData || {});
+                    } else {
+                        // If no config exists, create one with defaults
+                        setDoc(configRef, { 
+                            title: DEFAULT_QUIZ_TITLE,
+                            registrationDate: '2025-08-11',
+                            examDate: '2025-08-12',
+                            examStartTime: '10:00',
+                            examEndTime: '12:00',
+                            duration: 3600,
+                            quizData: DEFAULT_QUIZ_DATA
+                        });
+                    }
+                    setIsLoading(false);
+                });
 
-                    // Load from local storage only if it exists, otherwise keep the new defaults
-                    setQuizData(storedData ? JSON.parse(storedData) : DEFAULT_QUIZ_DATA);
-                    setQuizTitle(storedTitle || DEFAULT_QUIZ_TITLE);
-                    setStudentReports(storedReports ? JSON.parse(storedReports) : []);
-                    setRegisteredStudents(storedRegisteredStudents ? JSON.parse(storedRegisteredStudents) : []);
-                    setRegistrationDate(storedRegDate || '2025-08-11');
-                    setExamDate(storedExamDate || '2025-08-12');
-                    setExamStartTime(storedExamStartTime || '10:00');
-                    setExamEndTime(storedExamEndTime || '12:00');
-                    setQuizDuration(storedDuration ? JSON.parse(storedDuration) : 3600);
+                const studentsRef = collection(db, `/artifacts/${appId}/public/data/registeredStudents`);
+                const unsubscribeStudents = onSnapshot(studentsRef, (snapshot) => {
+                    const students = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    setRegisteredStudents(students);
+                });
 
-                } catch (e) { console.error("Failed to load data from localStorage", e); }
-            }, []);
+                const reportsRef = collection(db, `/artifacts/${appId}/public/data/studentReports`);
+                const unsubscribeReports = onSnapshot(reportsRef, (snapshot) => {
+                    const reports = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    setStudentReports(reports);
+                });
+
+                // Cleanup listeners on component unmount
+                return () => {
+                    unsubscribeConfig();
+                    unsubscribeStudents();
+                    unsubscribeReports();
+                };
+            }, [db, doc, onSnapshot, collection, appId, setDoc]);
             
             const loginAdmin = () => { setIsAdminLoggedIn(true); setView('admin'); };
             const logoutAdmin = () => { setIsAdminLoggedIn(false); setView('student'); };
             const showInfo = (message) => { setInfoMessage(message); setIsInfoModalOpen(true); };
 
-            const saveData = React.useCallback(() => {
+            // This function now saves all config data to a single document in Firestore
+            const saveData = async () => {
+                const configRef = doc(db, `/artifacts/${appId}/public/data/quizConfig/main`);
                 try {
-                    localStorage.setItem('rrbQuizData', JSON.stringify(quizData));
-                    localStorage.setItem('rrbQuizTitle', quizTitle);
-                    localStorage.setItem('rrbQuizReports', JSON.stringify(studentReports));
-                    localStorage.setItem('rrbRegisteredStudents', JSON.stringify(registeredStudents));
-                    if (registrationDate) localStorage.setItem('rrbRegistrationDate', registrationDate); else localStorage.removeItem('rrbRegistrationDate');
-                    if (examDate) localStorage.setItem('rrbExamDate', examDate); else localStorage.removeItem('rrbExamDate');
-                    if (examStartTime) localStorage.setItem('rrbExamStartTime', examStartTime); else localStorage.removeItem('rrbExamStartTime');
-                    if (examEndTime) localStorage.setItem('rrbExamEndTime', examEndTime); else localStorage.removeItem('rrbExamEndTime');
-                    localStorage.setItem('rrbQuizDuration', JSON.stringify(quizDuration));
-                } catch (e) { showInfo("Could not save data. Your browser might be in private mode or storage is full."); }
-            }, [quizData, quizTitle, studentReports, registeredStudents, registrationDate, examDate, examStartTime, examEndTime, quizDuration]);
+                    await setDoc(configRef, {
+                        title: quizTitle,
+                        registrationDate,
+                        examDate,
+                        examStartTime,
+                        examEndTime,
+                        duration: quizDuration,
+                        quizData
+                    }, { merge: true }); // merge: true prevents overwriting fields not included here
+                    showInfo("All changes saved successfully!");
+                } catch (e) {
+                    console.error("Error saving data: ", e);
+                    showInfo("Could not save data. Please check the console for errors.");
+                }
+            };
             
+            // These functions now modify the state, and the saveData function persists it
             const addSubject = (name) => setQuizData(prev => ({ ...prev, [name]: { questions: [] } }));
             const deleteSubject = (name) => setQuizData(prev => { const newData = { ...prev }; delete newData[name]; return newData; });
             const updateQuestion = (subject, question, index) => { setQuizData(prev => { const newQuestions = [...prev[subject].questions]; if (index !== null) newQuestions[index] = question; else newQuestions.push(question); return { ...prev, [subject]: { questions: newQuestions } }; }); };
             const deleteQuestion = (subject, index) => setQuizData(prev => ({ ...prev, [subject]: { questions: prev[subject].questions.filter((_, i) => i !== index) } }));
             
-            const registerStudent = (student) => {
+            // Student registration now adds a document to the 'registeredStudents' collection
+            const registerStudent = async (student) => {
                 const isDuplicate = registeredStudents.some(s => s.email.toLowerCase() === student.email.toLowerCase());
-                if (isDuplicate) { showInfo("A student with this email is already registered."); return false; }
-                setRegisteredStudents(prev => { const newStudents = [...prev, student]; try { localStorage.setItem('rrbRegisteredStudents', JSON.stringify(newStudents)); } catch (e) { console.error("Failed to save registered students", e); } return newStudents; });
-                showInfo("Registration successful! You may now go to the Student View to log in.");
-                return true;
+                if (isDuplicate) {
+                    showInfo("A student with this email is already registered.");
+                    return false;
+                }
+                try {
+                    const studentsRef = collection(db, `/artifacts/${appId}/public/data/registeredStudents`);
+                    await addDoc(studentsRef, student);
+                    showInfo("Registration successful! You may now go to the Student View to log in.");
+                    return true;
+                } catch (e) {
+                    console.error("Error registering student: ", e);
+                    showInfo("Registration failed. Please try again.");
+                    return false;
+                }
             };
             
-            const saveStudentReport = (report) => {
-                setStudentReports(prev => {
-                    const newReports = [...prev, report];
-                    try { localStorage.setItem('rrbQuizReports', JSON.stringify(newReports)); } catch (e) { console.error("Failed to save student report", e); }
-                    return newReports;
-                });
+            // Saving a report adds a document to the 'studentReports' collection
+            const saveStudentReport = async (report) => {
+                try {
+                    const reportsRef = collection(db, `/artifacts/${appId}/public/data/studentReports`);
+                    await addDoc(reportsRef, report);
+                } catch (e) {
+                    console.error("Error saving student report: ", e);
+                }
             };
 
             const value = {
                 quizData, quizTitle, studentReports, registeredStudents, registrationDate, examDate, examStartTime, examEndTime, quizDuration, setQuizData, setQuizTitle, addSubject, deleteSubject, updateQuestion, deleteQuestion, saveData, registerStudent, saveStudentReport, showInfo, setRegistrationDate, setExamDate, setExamStartTime, setExamEndTime, setQuizDuration, view, setView, isAdminLoggedIn, loginAdmin, logoutAdmin
             };
+
+            if (isLoading) {
+                return <div className="text-center p-10 text-xl">Loading Quiz...</div>;
+            }
 
             return (
                 <QuizContext.Provider value={value}>
@@ -1730,11 +1644,17 @@
           throw new Error("Could not find root element to mount to");
         }
         const root = ReactDOM.createRoot(rootElement);
-        root.render(
-          <React.StrictMode>
-            <App />
-          </React.StrictMode>
-        );
+        // Wait for firebase to be ready before rendering
+        const checkFirebase = setInterval(() => {
+            if (window.firebaseServices) {
+                clearInterval(checkFirebase);
+                root.render(
+                  <React.StrictMode>
+                    <App />
+                  </React.StrictMode>
+                );
+            }
+        }, 100);
 
     </script>
 </body>
